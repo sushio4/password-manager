@@ -17,4 +17,5 @@ public:
     bool isUpToDate(void);
     bool readSafes(std::vector<Safe>& safes);
     bool writeSafes(const std::vector<Safe>& safes);
+    bool writeCredentials(std::string email, std::string password);
 };

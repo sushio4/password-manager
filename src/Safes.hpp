@@ -12,7 +12,7 @@ private:
     CipherModule& cipher;
     SyncModule& sync;
 
-    Safe open;
+    Safe* open;
 
 
 public:
