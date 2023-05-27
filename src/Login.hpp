@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 #include "Sync.hpp"
 #include "Cipher.hpp"
@@ -7,11 +8,11 @@
 class LoginModule
 {
 private:
-    CipherModule& cipher;
-    SyncModule& sync;
+    std::shared_ptr<CipherModule> cipher;
+    std::shared_ptr<SyncModule> sync;
 
 public:
-    LoginModule(SyncModule& syncMod, CipherModule& cipherMod);
+    LoginModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef);
 
     bool login(std::string password);
     bool changePassword(std::string oldPassword, std::string newPassword);

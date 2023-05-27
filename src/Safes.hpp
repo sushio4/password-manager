@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 #include "Sync.hpp"
 #include "Cipher.hpp"
@@ -9,14 +10,14 @@
 class SafesModule
 {
 private:
-    CipherModule& cipher;
-    SyncModule& sync;
+    std::shared_ptr<CipherModule> cipher;
+    std::shared_ptr<SyncModule> sync;
 
     Safe* open;
 
 
 public:
-    SafesModule(SyncModule& syncMod, CipherModule& cipherMod);
+    SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef);
 
     const Safe& getSafe(std::string name);
     bool writeSafe(const Safe& safe, std::string name);

@@ -1,16 +1,17 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "Safes.hpp"
 
 class GeneratorModule
 {
 private:
-    SafesModule& safes;
+    std::shared_ptr<SafesModule> safes;
 
 public:
-    GeneratorModule(SafesModule& safesMod);
+    GeneratorModule(std::shared_ptr<SafesModule>& safesRef);
 
     std::string generate(const std::vector<std::string>& options);
 };
