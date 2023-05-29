@@ -16,3 +16,18 @@ unsigned long offsetOf(U T::*member)
 
 #define private(X, Y) (X.Y ## 272271())
 
+/*
+*   EXAMPLE USAGE:
+*   
+*   class foo{
+*   private:
+*       int bar;
+*   public:
+*       hackPrivate(bar);
+*   };
+*
+*   int main(){
+*       private(foo,bar) = 5;
+*       std::cout << private(foo, bar); 
+*   }
+*/
