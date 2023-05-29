@@ -5,7 +5,7 @@
 #include <exception>
 
 #include "Manager.hpp"
-#include "CLIFunctions.hpp"
+#include "CLIManagementFunctions.hpp"
 
 
 typedef std::vector<std::string> args_t;

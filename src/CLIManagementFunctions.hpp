@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "Manager.hpp"
+#include "CLIInputFunctions.hpp"
 
 #define checkArgNum(num, message) \
     if(vec.size() != num)\
@@ -11,19 +12,6 @@
         std::cout<<message;\
         return;\
     }
-
-typedef std::vector<std::string> args_t;
-
-void getGenArgs(args_t& args)
-{
-    std::string temp;
-    std::cout << "Enter length: ";
-    std::cin >> temp;
-    args.push_back(temp);
-    std::cout << "Enter character set [ascii|alphanumeric|numeric|letters]: ";
-    std::cin >> temp;
-    args.push_back(temp);
-}
 
 
 void helpFunction(Manager& mgr, const args_t& vec)
@@ -71,7 +59,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
     }
     else if(vec[1] == "edit")
     {
-        checkArgNum(4, "Usage: safe edit [name|password] <safename>\n");
+        checkArgNum(4, "Usage: safe edit [name|password|AEStype] <safename>\n");
 
         if(!mgr.existsSafe(vec[3]))
         {
@@ -79,26 +67,19 @@ void safeFunction(Manager& mgr, const args_t& vec)
             return;
         }
 
-        args_t data(2);
+        args_t data(3);
 
         if(vec[2] == "name")
         {
-            std::cout << "Enter new name for this safe:\n";
-            std::cin >> data[0];
-            data[1] = mgr.readPassword(vec[3]);
+            if(!inputSafeName(data[0])) return;
         }
         else if(vec[2] == "password")
         {
-            std::cout << "Enter new password for this safe (enter \"-\" to generate it):\n";
-            std::cin >> data[1];
-            data[0] = vec[3];
-
-            if(data[1] == "-")
-            {
-                args_t args;
-                getGenArgs(args);
-                data[1] = mgr.generatePassword(args);
-            }
+            if(!inputSafePassword(data[1], mgr)) return;
+        }
+        else if(vec[2] == "AEStype")
+        {
+            if(!inputSafeAESType(data[2])) return;
         }
 
         if(!mgr.editSafe(vec[3], data));
@@ -113,17 +94,12 @@ void safeFunction(Manager& mgr, const args_t& vec)
             return;
         }
 
-        args_t data(2);
+        args_t data(3);
         data[0] = vec[2]; //name
 
-        std::cout << "Enter a password for that safe (\"-\" to generate)\n";
-        std::cin >> data[1];
-        if(data[1] == "-")
-        {
-            args_t args;
-            getGenArgs(args);
-            data[1] = mgr.generatePassword(args);
-        }
+        if( !inputSafePassword(data[1], mgr) || 
+            !inputSafeAESType (data[2])) return;
+
         mgr.newSafe(data);
     }
 }
