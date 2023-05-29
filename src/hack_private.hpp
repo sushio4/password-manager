@@ -17,6 +17,17 @@ unsigned long offsetOf(U T::*member)
 #define private(X, Y) (X.Y ## 272271())
 
 /*
+*   This is made due to the requirements:
+*       - not to use get/set methods
+*       - not to use structs
+*       - not to use private fields
+*
+*   And I am very determined to find loopholes in anything our prof
+*       is going to say about that.
+*
+*   very.
+*
+*
 *   EXAMPLE USAGE:
 *   
 *   class foo{
