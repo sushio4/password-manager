@@ -19,7 +19,7 @@ private:
 public:
     Manager(void);
 
-    std::string getSafeList(void) const;
+    void getSafeList(std::vector<std::string>& list) const;
     std::string readPassword(const std::string& safeName);
     std::string generatePassword(const std::vector<std::string>& args);
     
