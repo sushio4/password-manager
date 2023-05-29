@@ -2,6 +2,7 @@
 #include <iostream>
 #include <hash_map>
 #include <cstring>
+#include <exception>
 
 #include "Manager.hpp"
 #include "CLIFunctions.hpp"
@@ -56,7 +57,12 @@ void parseInput(Manager& mgr, const args_t& vec)
         {"safe", safeFunction}
     };
 
-    auto func = map.at(vec[0]);
-    func(mgr, vec); 
+    try{
+        auto func = map.at(vec[0]);
+        func(mgr, vec);
+    } catch(std::exception& e)
+    {
+        helpFunction(mgr, vec);
+    } 
 }
 
