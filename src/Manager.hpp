@@ -22,6 +22,7 @@ public:
     std::string getSafeList(void) const;
     std::string readPassword(const std::string& safeName);
     
+    bool existsSafe(const std::string& name);
     bool editSafe(const std::string& safeName, const std::vector<std::string>& data);
     bool newSafe(const std::vector<std::string>& data);
 
