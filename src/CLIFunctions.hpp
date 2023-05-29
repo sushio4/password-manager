@@ -54,7 +54,10 @@ void safeFunction(Manager& mgr, const args_t& vec)
 
     if(vec[1] == "list")
     {
-        std::cout << mgr.getSafeList() << std::endl;
+        args_t list;
+        mgr.getSafeList(list);
+        for(auto e : list)
+            std::cout << " - " << e << "\n";
     }
     else if(vec[1] == "get")
     {
