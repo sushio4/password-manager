@@ -9,6 +9,8 @@
 
 
 typedef std::vector<std::string> args_t;
+void getInput(args_t&);
+void parseInput(Manager&, const args_t&);
 
 int main(int argc, char* argv[])
 {
@@ -43,6 +45,7 @@ void getInput(args_t& vec)
     while(token)
     {
         vec.push_back(token);
+        free(token);
         token = strtok(NULL, " ");
     }
 }
@@ -54,7 +57,8 @@ void parseInput(Manager& mgr, const args_t& vec)
     const std::unordered_map<std::string, func_ptr> map = {
         {"help", helpFunction},
         {"login", loginFunction},
-        {"safe", safeFunction}
+        {"safe", safeFunction},
+        {"sync", synchronizeFunction}
     };
 
     try{
