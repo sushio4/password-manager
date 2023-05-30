@@ -14,6 +14,9 @@ protected:
     uint8_t * encryptedData;
     uint8_t * decryptedData;
 
+    // after all I need that data length info
+    long dataLength;
+
     static const uint8_t SBOX[16][16];
     static const uint8_t INVSBOX[16][16];
     static const uint8_t RCON[32];
@@ -53,7 +56,8 @@ protected:
     void expandKey();
 
 public:
-    AES128(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
+// dataLength added to constructor in each AES class
+    AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[16]);
@@ -72,7 +76,7 @@ protected:
     void expandKey();
 
 public:
-    AES192(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
+    AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[24]);
@@ -91,7 +95,7 @@ protected:
     void expandKey();
 
 public:
-    AES256(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
+    AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[32]);
@@ -105,7 +109,7 @@ private:
     uint8_t * iv;
 
 public:
-    AES128CBC(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
+    AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[16], uint8_t iv[16]);
@@ -118,7 +122,7 @@ private:
     uint8_t * iv;
 
 public:
-    AES192CBC(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
+    AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[24], uint8_t iv[16]);
@@ -131,7 +135,7 @@ private:
     uint8_t * iv;
 
 public:
-    AES256CBC(uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
+    AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr);
     uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[32], uint8_t iv[16]);
