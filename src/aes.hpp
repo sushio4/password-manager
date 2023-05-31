@@ -8,7 +8,8 @@
 #include <cstdint>
 
 class AES{
-protected:
+//protected:
+public:
     uint8_t * key;
     uint8_t * salt;
     uint8_t * encryptedData;
@@ -21,27 +22,28 @@ protected:
     static const uint8_t INVSBOX[16][16];
     static const uint8_t RCON[32];
 
-    void rotWord(uint8_t ($word)[4]);
-    void subWord(uint8_t ($word)[4]);
-    void invSubWord(uint8_t ($word)[4]);
-    void shiftRows(uint8_t ($chunk)[4][4]);
-    void invShiftRows(uint8_t ($chunk)[4][4]);
+    void rotWord(uint8_t (&word)[4]);
+    void subWord(uint8_t (&word)[4]);
+    void invSubWord(uint8_t (&word)[4]);
+    void shiftRows(uint8_t (&chunk)[4][4]);
+    void invShiftRows(uint8_t (&chunk)[4][4]);
 
     static uint8_t mixColumnsMultiplicator(uint8_t bt, uint8_t mult);
 
-    void mixColumns(uint8_t ($chunk)[4][4]);
-    void invMixColumns(uint8_t ($chunk)[4][4]);
+    void mixColumns(uint8_t (&chunk)[4][4]);
+    void invMixColumns(uint8_t (&chunk)[4][4]);
 
     virtual void expandKey() = 0;
     void generateSalt();
     void addPadding();
     void removePadding();
 
-public:
+//public:
 
-    virtual uint8_t* generateKey() = 0;
+    //virtual uint8_t* generateKey() = 0;
     virtual uint8_t* encrypt() = 0;
     virtual uint8_t* encrypt(uint8_t givenKey[16]) = 0;
+    //virtual uint8_t* encrypt() = 0;
     virtual uint8_t* decrypt() = 0;
     virtual uint8_t* decrypt(uint8_t givenKey[16]) = 0;
 };
@@ -51,19 +53,20 @@ private:
     static const int ROUNDCOUNT = 10;
     static const int KEYLENGTH = 16;
 
-protected:
+public:
+//protected:
     uint8_t expandedKey[176];
     void expandKey();
 
 public:
 // dataLength added to constructor in each AES class
-    AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
-    uint8_t* generateKey();
+    AES128(long dataLength, uint8_t* k, uint8_t* encryptedData, uint8_t* decryptedData);
+    // AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr) : dataLength(dataLength), key(key), encryptedData(encryptedData), decryptedData(decryptedData) {}
+    //uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[16]);
     uint8_t* decrypt();
     uint8_t* decrypt(uint8_t givenKey[16]);
-
 };
 
 class AES192: public AES{
