@@ -8,8 +8,7 @@
 #include <cstdint>
 
 class AES{
-//protected:
-public:
+protected:
     uint8_t * key;
     uint8_t * salt;
     uint8_t * encryptedData;
@@ -38,12 +37,11 @@ public:
     void addPadding();
     void removePadding();
 
-//public:
+public:
 
     //virtual uint8_t* generateKey() = 0;
     virtual uint8_t* encrypt() = 0;
     virtual uint8_t* encrypt(uint8_t givenKey[16]) = 0;
-    //virtual uint8_t* encrypt() = 0;
     virtual uint8_t* decrypt() = 0;
     virtual uint8_t* decrypt(uint8_t givenKey[16]) = 0;
 };
@@ -53,15 +51,13 @@ private:
     static const int ROUNDCOUNT = 10;
     static const int KEYLENGTH = 16;
 
-public:
-//protected:
+protected:
     uint8_t expandedKey[176];
     void expandKey();
 
 public:
 // dataLength added to constructor in each AES class
     AES128(long dataLength, uint8_t* k, uint8_t* encryptedData, uint8_t* decryptedData);
-    // AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr) : dataLength(dataLength), key(key), encryptedData(encryptedData), decryptedData(decryptedData) {}
     //uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[16]);
