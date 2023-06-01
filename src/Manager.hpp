@@ -27,9 +27,10 @@ public:
     bool editSafe(const std::string& safeName, const std::vector<std::string>& data);
     bool newSafe(const std::vector<std::string>& data);
 
-    bool loginLocal(std::string password);
-    bool createRemoteAccount(std::string email, std::string password);
-    bool changePassword(std::string oldPassword, std::string newPassword);
-    bool changeEmail(std::string password, std::string email);
-    bool synchronize(std::string email, std::string password);
+    bool loginLocal(const std::string& password);
+    bool createRemoteAccount(const std::string& email, const std::string& password);
+    bool changePassword(const std::string& oldPassword, const std::string& newPassword);
+    bool changeEmail(const std::string& password, const std::string& email);
+    bool loginRemote(const std::string& email, const std::string& password);
+    bool synchronize(void);
 };

@@ -38,5 +38,40 @@ bool Manager::existsSafe(const std::string& name)
 
 bool Manager::editSafe(const std::string& safeName, const std::vector<std::string>& data)
 {
-    git
+    return safes->writeSafe(safeName, data);
+}
+
+bool Manager::newSafe(const std::vector<std::string>& data)
+{
+    return safes->createSafe(data);
+}
+
+bool Manager::loginLocal(const std::string& password)
+{
+    return login->login(password);
+}
+
+bool Manager::createRemoteAccount(const std::string& password, const std::string& email)
+{
+    return login->changeEmail(password, email);
+}
+
+bool Manager::changePassword(const std::string& oldPassword, const std::string& newPassword)
+{
+    return login->changePassword(oldPassword, newPassword);
+}
+
+bool Manager::changeEmail(const std::string& password, const std::string& email)
+{
+    return login->changeEmail(password, email);
+}
+
+bool Manager::loginRemote(const std::string& email, const std::string& password)
+{
+    return login->loginRemote(email, password);
+}
+
+bool Manager::synchronize(void)
+{
+    return login->synchronize();
 }
