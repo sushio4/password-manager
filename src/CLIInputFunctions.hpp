@@ -18,7 +18,7 @@ void inputGenArgs(args_t& args)
     args.push_back(temp);
 }
 
-bool inputSafeName(std::string& name)
+bool inputPasswordName(std::string& name)
 {
     std::cout << "Enter new name for this safe:\n";
     std::cin >> name;
@@ -30,7 +30,7 @@ bool inputSafeName(std::string& name)
     return true;
 }
 
-bool inputSafePassword(std::string& password, Manager& mgr)
+bool inputPassword(std::string& password, Manager& mgr)
 {
     std::cout << "Enter new password for this safe (enter \"-\" to generate it):\n";
     std::cin >> password;
@@ -44,7 +44,7 @@ bool inputSafePassword(std::string& password, Manager& mgr)
     return true;
 }
 
-bool inputSafeAESType(std::string& type)
+bool inputAESType(std::string& type)
 {
     std::cout << "Enter a number:\n"
         "0 - 128 bit\n"

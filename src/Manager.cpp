@@ -12,14 +12,14 @@ Manager::Manager(void)
     logged = false;
 }
 
-void Manager::getSafeList(std::vector<std::string>& list) const
+void Manager::getPasswordList(std::vector<std::string>& list) const
 {
-    safes->getSafeList(list);
+    safes->getPasswordList(list);
 }
 
-std::string Manager::readPassword(const std::string& safeName) 
+std::string Manager::readPassword(const std::string& name) 
 {
-    return safes->getDecryptedSafe(safeName);
+    return safes->getPassword(name);
 }
 
 std::string Manager::generatePassword(const std::vector<std::string>& args)
@@ -27,23 +27,23 @@ std::string Manager::generatePassword(const std::vector<std::string>& args)
     return generator->generate(args);
 }
 
-bool Manager::existsSafe(const std::string& name)
+bool Manager::existsPassword(const std::string& name)
 {
     std::vector<std::string> list;
-    safes->getSafeList(list);
+    safes->getPasswordList(list);
     for(auto s : list)
         if(s == name) return true;
     return false;
 }
 
-bool Manager::editSafe(const std::string& safeName, const std::vector<std::string>& data)
+bool Manager::editPassword(const std::string& name, const std::vector<std::string>& data)
 {
-    return safes->writeSafe(safeName, data);
+    return safes->writePassword(name, data);
 }
 
-bool Manager::newSafe(const std::vector<std::string>& data)
+bool Manager::newPassword(const std::vector<std::string>& data)
 {
-    return safes->createSafe(data);
+    return safes->addPassword(data);
 }
 
 bool Manager::loginLocal(const std::string& password)
@@ -56,7 +56,7 @@ bool Manager::createRemoteAccount(const std::string& password, const std::string
     return login->changeEmail(password, email);
 }
 
-bool Manager::changePassword(const std::string& oldPassword, const std::string& newPassword)
+bool Manager::changeLoginPassword(const std::string& oldPassword, const std::string& newPassword)
 {
     return login->changePassword(oldPassword, newPassword);
 }

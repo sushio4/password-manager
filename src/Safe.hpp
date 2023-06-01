@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <vector>
+#include <stdint.h>
 
 #include "aes.hpp"
 #include "hack_private.hpp"
@@ -16,11 +18,13 @@ enum AESType{
 
 class Safe{
 private:
-    std::string name;
+    std::vector<std::string> names;
+    std::vector<uint8_t*> passwords;
     std::unique_ptr<AES> cipher;
     AESType type;
 public:
-    hackPrivate(name);
+    hackPrivate(names);
+    hackPrivate(passwords);
     hackPrivate(cipher);
     hackPrivate(type);
 };

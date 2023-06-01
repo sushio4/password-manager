@@ -43,7 +43,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
     if(vec[1] == "list")
     {
         args_t list;
-        mgr.getSafeList(list);
+        mgr.getPasswordList(list);
         for(auto e : list)
             std::cout << " - " << e << "\n";
     }
@@ -61,7 +61,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
     {
         checkArgNum(4, "Usage: safe edit [name|password|AEStype] <safename>\n");
 
-        if(!mgr.existsSafe(vec[3]))
+        if(!mgr.existsPassword(vec[3]))
         {
             std::cout << "Safe named " << vec[3] << " does not exist.\n";
             return;
@@ -71,24 +71,24 @@ void safeFunction(Manager& mgr, const args_t& vec)
 
         if(vec[2] == "name")
         {
-            if(!inputSafeName(data[0])) return;
+            if(!inputPasswordName(data[0])) return;
         }
         else if(vec[2] == "password")
         {
-            if(!inputSafePassword(data[1], mgr)) return;
+            if(!inputPassword(data[1], mgr)) return;
         }
         else if(vec[2] == "AEStype")
         {
-            if(!inputSafeAESType(data[2])) return;
+            if(!inputAESType(data[2])) return;
         }
 
-        if(!mgr.editSafe(vec[3], data));
+        if(!mgr.editPassword(vec[3], data));
             std::cout << "Could not edit that safe.\n";
     }
     else if(vec[1] == "new")
     {
         checkArgNum(3, "Usage: safe new <safename>\n");
-        if(mgr.existsSafe(vec[2]))
+        if(mgr.existsPassword(vec[2]))
         {
             std::cout << "Safe already exists!\n";
             return;
@@ -97,10 +97,10 @@ void safeFunction(Manager& mgr, const args_t& vec)
         args_t data(3);
         data[0] = vec[2]; //name
 
-        if( !inputSafePassword(data[1], mgr) || 
-            !inputSafeAESType (data[2])) return;
+        if( !inputPassword(data[1], mgr) || 
+            !inputAESType (data[2])) return;
 
-        mgr.newSafe(data);
+        mgr.newPassword(data);
     }
 }
 
