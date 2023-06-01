@@ -22,7 +22,8 @@ public:
 
     std::string getDecryptedSafe(std::string name);
     void getSafeList(std::vector<std::string>& list);    
-    bool writeSafe(const Safe& safe, std::string name);
+    bool writeSafe (const std::string& name, const std::vector<std::string>& data);
+    bool createSafe(const std::vector<std::string>& data);
     bool synchronize(void);
 
 private:
