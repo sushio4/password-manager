@@ -106,10 +106,29 @@ void safeFunction(Manager& mgr, const args_t& vec)
 
 void synchronizeFunction(Manager& mgr, const args_t& vec)
 {
-    checkArgNum(3, "Usage: sync <email> <password>\n");
-
-    if(mgr.synchronize(vec[1], vec[2]))
+    if(mgr.synchronize())
+    {
         std::cout << "Synchronized successfully!\n";
-    else
-        std::cout << "Could not synchronize. Check your credentials and/or internet connection.\n";
+        return;
+    }
+    
+    std::cout << "Please enter your credentials.\nemail: ";
+    std::string email, password;
+    std::cin >> email;
+    std::cout << "password: ";
+    std::cin >> password;
+
+    if(!mgr.loginRemote(email, password))
+    {
+        std::cout << "Could not log in. Check your credentials.\n";
+        return;
+    }
+
+    if(!mgr.synchronize())
+    {
+        std::cout << "Synchronization failed. Check internet connection.\n";
+        return;
+    }
+
+    std::cout << "Synchronization successfull!\n";
 }
