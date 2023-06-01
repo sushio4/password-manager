@@ -23,6 +23,8 @@ private:
     std::unique_ptr<AES> cipher;
     AESType type;
 public:
+    ~Safe() { for(auto e : passwords) delete[] e; }
+
     hackPrivate(names);
     hackPrivate(passwords);
     hackPrivate(cipher);
