@@ -19,6 +19,6 @@ public:
     //as this is the only class containing masterKey
     //it will be (en/de)crypting everything with those
     //using functions from inside the AES object
-    bool decrypt(AES& src, std::string& dest);
-    bool encrypt(const std::string& src, AES& dest);
+    bool decrypt(AES& aes, const uint8_t* src, uint8_t* dest);
+    bool encrypt(AES& aes, const uint8_t* src, uint8_t* dest);
 };

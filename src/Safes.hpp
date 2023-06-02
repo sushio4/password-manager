@@ -2,10 +2,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 
 #include "Sync.hpp"
 #include "Cipher.hpp"
-
+#include "aes.hpp"
 #include "Safe.hpp"
 
 class SafesModule
@@ -14,9 +15,9 @@ private:
     std::shared_ptr<CipherModule> cipher;
     std::shared_ptr<SyncModule> sync;
 
-    Safe* open;
+    Safe* openSafe = nullptr;
 
-
+    std::vector<std::pair<std::string, std::string>> passFilePairs; //{passwordname, filename}
 
 public:
     SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef);
@@ -44,7 +45,7 @@ private:
 *   structure:
 *       - magic number 0x65666173 ("safe" in ascii)
 *
-*       - size of the encrypted key to the password (byte)
+*       - size of the encrypted key to the password (uint16_t)
 *       - encrypted key to the passwords
 *
 *       - AES type (byte 0-5)
