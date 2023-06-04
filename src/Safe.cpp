@@ -20,6 +20,22 @@ void Safe::add(std::string&& name, uint8_t* password, uint8_t passwordLength)
     passLengths.push_back(passwordLength);
 }
 
+bool Safe::change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength)
+{
+    if((*this)[newName].first) return false; //if the newName already exists
+
+    for(int i = 0; i < names.size(); i++)
+    {
+        if(name == names[i])
+        {
+            if(newName != "") names[i] == newName;
+            if(password && passwordLength) passwords[i] = password, passLengths[i] = passwordLength;
+            return true;
+        }
+    }
+    return false;
+}
+
 auto Safe::operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>
 {
     for(int i = 0; i < names.size(); i++)
