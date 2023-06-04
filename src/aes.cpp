@@ -45,6 +45,8 @@ const uint8_t AES::INVSBOX[16][16] = {
 // TWO LAST VALUES ARE WRONG - REPAIR LATER
 
 const uint8_t AES::RCON[32] = {
+    // so the first element has to be 0x01 not 0x00?
+    // nope
         0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,
         0x1B,0x36,0x6C,0xD8,0xAB,0x4D,0x9A,0x2F,0x5E,
         0xBC,0x63,0xC6,0x97,0x35,0x6A,0xD4,0xB3,0x7D,
@@ -72,15 +74,28 @@ void AES::invSubWord(uint8_t (&word)[4]){
     }
 }
 
+// void AES::shiftRows(uint8_t (&chunk)[4][4]){
+//     // all rows at once from chunk not word
+//     for(int i = 1; i < 4; i++){
+//         for(int ii = 0; ii < i; ii++){
+//             uint8_t buffer = chunk[i][0];
+//             for(int iii = 0; iii < 3 ; iii++){
+//                 chunk[i][iii] = chunk[i][iii+1];
+//             }
+//             chunk[i][3] = buffer;
+//         }
+//     }
+// }
+
 void AES::shiftRows(uint8_t (&chunk)[4][4]){
     // all rows at once from chunk not word
     for(int i = 1; i < 4; i++){
         for(int ii = 0; ii < i; ii++){
-            uint8_t buffer = chunk[i][0];
+            uint8_t buffer = chunk[0][i];
             for(int iii = 0; iii < 3 ; iii++){
-                chunk[i][iii] = chunk[i][iii+1];
+                chunk[iii][i] = chunk[iii+1][i];
             }
-            chunk[i][3] = buffer;
+            chunk[3][i] = buffer;
         }
     }
 }
@@ -141,15 +156,30 @@ void AES::mixColumns(uint8_t (&chunk)[4][4]){
     for(int i = 0; i < 4 ; i++){
         // not sure if that static_cast is needed either
         // remove and check later
-        tmp[0][i] = static_cast<uint8_t>(mixColumnsMultiplicator(chunk[0][i], 2) ^ mixColumnsMultiplicator(chunk[1][i], 3) ^ chunk[2][i] ^ chunk[3][i]);
-        tmp[1][i] = static_cast<uint8_t>(chunk[0][i] ^ mixColumnsMultiplicator(chunk[1][i], 2) ^ mixColumnsMultiplicator(chunk[2][i], 3) ^ chunk[3][i]);
-        tmp[2][i] = static_cast<uint8_t>(chunk[0][i] ^ chunk[1][i] ^ mixColumnsMultiplicator(chunk[2][i], 2) ^ mixColumnsMultiplicator(chunk[3][i], 3));
-        tmp[3][i] = static_cast<uint8_t>(mixColumnsMultiplicator(chunk[0][i], 3) ^ chunk[1][i] ^ chunk[2][i] ^ mixColumnsMultiplicator(chunk[3][i], 2));
+        // tmp[0][i] = static_cast<uint8_t>(mixColumnsMultiplicator(chunk[0][i], 2) ^ mixColumnsMultiplicator(chunk[1][i], 3) ^ chunk[2][i] ^ chunk[3][i]);
+        // tmp[1][i] = static_cast<uint8_t>(chunk[0][i] ^ mixColumnsMultiplicator(chunk[1][i], 2) ^ mixColumnsMultiplicator(chunk[2][i], 3) ^ chunk[3][i]);
+        // tmp[2][i] = static_cast<uint8_t>(chunk[0][i] ^ chunk[1][i] ^ mixColumnsMultiplicator(chunk[2][i], 2) ^ mixColumnsMultiplicator(chunk[3][i], 3));
+        // tmp[3][i] = static_cast<uint8_t>(mixColumnsMultiplicator(chunk[0][i], 3) ^ chunk[1][i] ^ chunk[2][i] ^ mixColumnsMultiplicator(chunk[3][i], 2));
 
-        chunk[0][i] = tmp[0][i];
-        chunk[1][i] = tmp[1][i];
-        chunk[2][i] = tmp[2][i];
-        chunk[3][i] = tmp[3][i];
+        // tmp[0][i] = mixColumnsMultiplicator(chunk[0][i], 2) ^ mixColumnsMultiplicator(chunk[1][i], 3) ^ chunk[2][i] ^ chunk[3][i];
+        // tmp[1][i] = chunk[0][i] ^ mixColumnsMultiplicator(chunk[1][i], 2) ^ mixColumnsMultiplicator(chunk[2][i], 3) ^ chunk[3][i];
+        // tmp[2][i] = chunk[0][i] ^ chunk[1][i] ^ mixColumnsMultiplicator(chunk[2][i], 2) ^ mixColumnsMultiplicator(chunk[3][i], 3);
+        // tmp[3][i] = mixColumnsMultiplicator(chunk[0][i], 3) ^ chunk[1][i] ^ chunk[2][i] ^ mixColumnsMultiplicator(chunk[3][i], 2);
+
+        tmp[i][0] = mixColumnsMultiplicator(chunk[i][0], 2) ^ mixColumnsMultiplicator(chunk[i][1], 3) ^ chunk[i][2] ^ chunk[i][3];
+        tmp[i][1] = chunk[i][0] ^ mixColumnsMultiplicator(chunk[i][1], 2) ^ mixColumnsMultiplicator(chunk[i][2], 3) ^ chunk[i][3];
+        tmp[i][2] = chunk[i][0] ^ chunk[i][1] ^ mixColumnsMultiplicator(chunk[i][2], 2) ^ mixColumnsMultiplicator(chunk[i][3], 3);
+        tmp[i][3] = mixColumnsMultiplicator(chunk[i][0], 3) ^ chunk[i][1] ^ chunk[i][2] ^ mixColumnsMultiplicator(chunk[i][3], 2);
+
+        // chunk[0][i] = tmp[0][i];
+        // chunk[1][i] = tmp[1][i];
+        // chunk[2][i] = tmp[2][i];
+        // chunk[3][i] = tmp[3][i];
+
+        chunk[i][0] = tmp[i][0];
+        chunk[i][1] = tmp[i][1];
+        chunk[i][2] = tmp[i][2];
+        chunk[i][3] = tmp[i][3];
     }
 
 }
@@ -208,30 +238,43 @@ AES128::AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
 }
 
 
+// is there inv needed?
 void AES128::expandKey(){
     // ROUNDCOUNT * KEYLENGTH + 16 actually so maybe later change will be ok
     uint8_t tmp[4];
 
     for(int i = 0; i < 16 ; i++){
         expandedKey[i] = *(key+i);
+        // std::cout<<std::hex<<expandedKey[i]<<std::endl;
     }
 
 
     int i = 0;
     while(i < 160){
-        for(auto &t : tmp){
-            t = expandedKey[16 - 4 + i];
+        // for(auto &t : tmp){
+        //     t = expandedKey[16 - 4 + i];
+        // }
+        for(int ii = 0; ii<4 ; ii++){
+            // this might be inacurrate
+            tmp[ii] = expandedKey[16 - 4 + ii + i];
+            // printf("%X ", tmp[ii]);
         }
+        // std::cout<<std::endl;
 
         if(i % 16 == 0){
+
             uint8_t tmpAgain = tmp[0];
+            // subword on bytes
             for(int ii = 0; ii < 3 ; ii++){
+                // why the fuck ii + 1? - so it was rotword and subword at once
                 tmp[ii] = SBOX[tmp[ii+1]/16][tmp[ii+1]%16];
+                // tmp[ii] = SBOX[tmp[ii]/16][tmp[ii]%16];
             }
             tmp[3] = SBOX[tmpAgain/16][tmpAgain%16];
 
-            // now it has to be xored with RCON
-            tmp[0] ^= RCON[i/16];
+            // xorwords and rcon 
+            // tmp[0] ^= RCON[i/16];
+            tmp[0] = tmp[0] ^ RCON[i/16 + 1];
         }
 
         for(int ii = 0; ii < 4 ; ii++){
@@ -262,32 +305,84 @@ uint8_t* AES128::encrypt(){
     for(int i = 0; i < dataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
     }
+    // ok we need to add repetition for each dataChunk !!
+    // for each round we need to xor with the key first
+    // but for now we have no iteration actually
+    // for(int ii = 0; ii < 16 ; ii++){
+    //     *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii);
+    // }
 
     // the round + last round (if before mix colums)
     for(int r = 1; r<=ROUNDCOUNT; r++){
+        
+        // printf("\nROUND %i\n", r);
+
+
         for(int i = 0; i < dataLength ; i+=16){
+
+            // printf("\n\n-----CHUNK------\n\n");
+
+            // here is the first iteration of data xored with begin key
+            if(r == 1){
+                for(int ii = i; ii < i+16 ; ii++){
+                    *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii%16);
+                }
+            }
+
             // the round - well will figure out how many times
             // that is on word [4]
+            // printf("\nBEFORE:\n");
             for(int ii = 0 ; ii < 4 ; ii++){
                 for(int iii = 0 ; iii < 4 ; iii++){
 //                    chunk[i][ii] = *(encryptedData + i + ii*4 + iii);
                     chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+                    // printf("%X ", chunk[ii][iii]);
                 }
 //                ok so I see it sends it like a reference by default huh?
                 subWord(chunk[ii]);
             }
+            // printf("\nAFTER SBOX:\n");
+            // for(int a = 0; a < 4; a++){
+            //     for(int aa = 0; aa < 4; aa++) printf("%X ", chunk[a][aa]);
+            // }
+            // shiftRows is borken
             shiftRows(chunk);
+            
+            // printf("\nAFTER SHIFTROWS:\n");
+            // for(int a = 0; a < 4; a++){
+            //     for(int aa = 0; aa < 4; aa++) printf("%X ", chunk[a][aa]);
+            // }
+
             // for final round purposes
+            // mixColumns is broken :<
             if(r != ROUNDCOUNT) mixColumns(chunk);
+
+            // printf("\nAFTER MIXCOLS:\n");
+            // for(int a = 0; a < 4; a++){
+            //     for(int aa = 0; aa < 4; aa++) printf("%X ", chunk[a][aa]);
+            // }
+            
             // addRoundKey and finish the round for chunk of data
             for(int ii = 0; ii < 4 ; ii++){
                 for(int iii = 0; iii < 4 ; iii++){
                     *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + r*16 + ii*4 + iii);
                 }
             }
-        }
-    }
 
+            // printf("\nAFTER ADDROUNDKEY:\n");
+            // for(int ii = 0; ii < 4 ; ii++){
+            //     for(int iii = 0; iii < 4 ; iii++){
+            //         printf("%X ", *(encryptedData + i + ii*4 + iii));
+            //     }
+            // }
+            
+        }
+        // printf("\nAFTER ADDROUNDKEY:\n");
+        // for(int i = 0 ; i < dataLength; i++){
+        //     printf("%X ", *(encryptedData + i));
+        // }
+        // std::cout<<std::endl;
+    }
     return encryptedData;
 }
 
@@ -344,43 +439,43 @@ uint8_t* AES128::decrypt(uint8_t givenKey[16]){
 }
 
 
-AES128CBC::AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-uint8_t* AES128CBC::generateKey(){}
-uint8_t* AES128CBC::encrypt(){}
-uint8_t* AES128CBC::encrypt(uint8_t givenKey[16], uint8_t iv[16]){}
-uint8_t* AES128CBC::decrypt(){}
-uint8_t* AES128CBC::decrypt(uint8_t givenKey[16], uint8_t iv[16]){}
+// AES128CBC::AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
+// uint8_t* AES128CBC::generateKey(){}
+// uint8_t* AES128CBC::encrypt(){}
+// uint8_t* AES128CBC::encrypt(uint8_t givenKey[16], uint8_t iv[16]){}
+// uint8_t* AES128CBC::decrypt(){}
+// uint8_t* AES128CBC::decrypt(uint8_t givenKey[16], uint8_t iv[16]){}
 
-// AES192 CLASS SECTION
+// // AES192 CLASS SECTION
 
-void AES192::expandKey(){}
-AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){}
-uint8_t* AES192::generateKey(){}
-uint8_t* AES192::encrypt(){}
-uint8_t* AES192::encrypt(uint8_t givenKey[24]){}
-uint8_t* AES192::decrypt(){}
-uint8_t* AES192::decrypt(uint8_t givenKey[24]){}
+// void AES192::expandKey(){}
+// AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){}
+// uint8_t* AES192::generateKey(){}
+// uint8_t* AES192::encrypt(){}
+// uint8_t* AES192::encrypt(uint8_t givenKey[24]){}
+// uint8_t* AES192::decrypt(){}
+// uint8_t* AES192::decrypt(uint8_t givenKey[24]){}
 
-AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-uint8_t* AES192CBC::generateKey(){}
-uint8_t* AES192CBC::encrypt(){}
-uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){}
-uint8_t* AES192CBC::decrypt(){}
-uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){}
+// AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
+// uint8_t* AES192CBC::generateKey(){}
+// uint8_t* AES192CBC::encrypt(){}
+// uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){}
+// uint8_t* AES192CBC::decrypt(){}
+// uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){}
 
-// AES256 CLASS SECTION
+// // AES256 CLASS SECTION
 
-void AES256::expandKey(){}
-AES256::AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){}
-uint8_t* AES256::generateKey(){}
-uint8_t* AES256::encrypt(){}
-uint8_t* AES256::encrypt(uint8_t givenKey[32]){}
-uint8_t* AES256::decrypt(){}
-uint8_t* AES256::decrypt(uint8_t givenKey[32]){}
+// void AES256::expandKey(){}
+// AES256::AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){}
+// uint8_t* AES256::generateKey(){}
+// uint8_t* AES256::encrypt(){}
+// uint8_t* AES256::encrypt(uint8_t givenKey[32]){}
+// uint8_t* AES256::decrypt(){}
+// uint8_t* AES256::decrypt(uint8_t givenKey[32]){}
 
-AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-uint8_t* AES256CBC::generateKey(){}
-uint8_t* AES256CBC::encrypt(){}
-uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){}
-uint8_t* AES256CBC::decrypt(){}
-uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){}
+// AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
+// uint8_t* AES256CBC::generateKey(){}
+// uint8_t* AES256CBC::encrypt(){}
+// uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){}
+// uint8_t* AES256CBC::decrypt(){}
+// uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){}
