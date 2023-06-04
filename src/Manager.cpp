@@ -85,3 +85,13 @@ bool Manager::synchronize(void)
 {
     return login->synchronize();
 }
+
+bool Manager::changeSafeName(const std::string& safename, const std::string& newname)
+{
+    return safes->changeSafeName(safename, newname);
+}
+
+bool Manager::changeSafeAESType(const std::string& safename, int type)
+{
+    return safes->changeSafeAESType(safename, type);
+}

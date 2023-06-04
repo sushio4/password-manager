@@ -22,7 +22,7 @@ private:
 public:
     SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef);
 
-    std::string getPassword(std::string name);
+    std::string getPassword(const std::string& name);
     void getPasswordList(std::vector<std::string>& list);   
     void getSafeList(std::vector<std::string>& list);   
     void getSafePasswordList(std::vector<std::string>& list);    
@@ -30,9 +30,14 @@ public:
     bool addPassword(const std::string& safename, const std::vector<std::string>& data);
     bool synchronize(void);
 
+    bool changeSafeName(const std::string& safename, const std::string& newname);
+    bool changeSafeAESType(const std::string& safename, int type);
+
 private:
-    bool readSafeListFile();
-    bool writeSafeListFile();
+    bool isInThatSafe(const std::string& passwordname);
+
+    bool readSafeListFile(void);
+    bool writeSafeListFile(void);
     bool readSafeFile(const std::string& filename);
     bool writeSafeFile(const std::string& filename);
     bool removeSafeFile(const std::string& filename);

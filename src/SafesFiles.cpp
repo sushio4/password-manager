@@ -2,6 +2,17 @@
 #include <fstream>
 #include <stdint.h>
 #include <utility>
+#include <cstdio>
+
+void SafesModule::closeSafe()
+{
+    delete openSafe;
+}
+
+bool SafesModule::removeSafeFile(const std::string& filename)
+{
+    return !std::remove(filename.c_str());
+}
 
 bool SafesModule::readSafeFile(const std::string& filename)
 {
@@ -35,7 +46,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
 
     auto decryptedKey = new uint8_t[keySize];
     AES256CBC aes;
-    cipher->decrypt(aes, encryptedKey, decryptedKey);
+    cipher->decryptKey(aes, encryptedKey, decryptedKey, keySize);
     delete[] encryptedKey;
 
     openSafe = new Safe(type, decryptedKey, keySize);

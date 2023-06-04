@@ -36,11 +36,12 @@ public:
 
     auto operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>;
     auto operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8_t>;
-    
+
     explicit operator std::string&()
     { return name; }
 
     void getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, AESType& type);
+    AES& cipherObjRef() {return *cipher;};
 
     uint32_t size();
 };
