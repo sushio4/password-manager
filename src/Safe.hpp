@@ -20,6 +20,7 @@ enum AESType{
 
 class Safe{
 private:
+    std::string name;
     std::vector<std::string> names;
     std::vector<uint8_t*> passwords;
     std::vector<uint8_t> passLengths;
@@ -35,6 +36,9 @@ public:
 
     auto operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>;
     auto operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8_t>;
+    
+    explicit operator std::string&()
+    { return name; }
 
     void getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, AESType& type);
 

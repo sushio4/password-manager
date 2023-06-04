@@ -43,9 +43,28 @@ void safeFunction(Manager& mgr, const args_t& vec)
     if(vec[1] == "list")
     {
         args_t list;
-        mgr.getPasswordList(list);
+        if(vec.size() == 2)
+        {   
+            std::cout << "All passwords:\n";
+            mgr.getSafePasswordList(list);
+        }
+        else if(vec[2] == "safes")
+        {
+            std::cout << "Your safes:\n";
+            mgr.getSafeList(list);
+        }
+        else if(vec[2] == "passwords")
+        {
+            std::cout << "Passwords in a current safe:\n";
+            mgr.getPasswordList(list);
+        }
+        else
+        {
+            std::cout << "Usage: safe list [safes|passwords](optional)\n";
+            return;
+        }
         for(auto e : list)
-            std::cout << " - " << e << "\n";
+            std::cout << e << "\n";
     }
     else if(vec[1] == "get")
     {
@@ -59,11 +78,11 @@ void safeFunction(Manager& mgr, const args_t& vec)
     }
     else if(vec[1] == "edit")
     {
-        checkArgNum(4, "Usage: safe edit [name|password|AEStype] <safename>\n");
+        checkArgNum(4, "Usage: safe edit [name|password] <passwordname>\n");
 
         if(!mgr.existsPassword(vec[3]))
         {
-            std::cout << "Safe named " << vec[3] << " does not exist.\n";
+            std::cout << "Password named " << vec[3] << " does not exist.\n";
             return;
         }
 
@@ -77,30 +96,44 @@ void safeFunction(Manager& mgr, const args_t& vec)
         {
             if(!inputPassword(data[1], mgr)) return;
         }
-        else if(vec[2] == "AEStype")
-        {
-            if(!inputAESType(data[2])) return;
-        }
 
         if(!mgr.editPassword(vec[3], data));
             std::cout << "Could not edit that safe.\n";
     }
-    else if(vec[1] == "new")
+    else if(vec[1] == "add")
     {
-        checkArgNum(3, "Usage: safe new <safename>\n");
+        checkArgNum(4, "Usage: safe add <safename> <passwordname>\n");
         if(mgr.existsPassword(vec[2]))
         {
-            std::cout << "Safe already exists!\n";
+            std::cout << "Password already exists!\n";
             return;
         }
 
-        args_t data(3);
-        data[0] = vec[2]; //name
+        args_t data(2);
+        data[0] = vec[3]; //name
 
-        if( !inputPassword(data[1], mgr) || 
-            !inputAESType (data[2])) return;
+        if( !inputPassword(data[1], mgr) ) return;
 
-        mgr.newPassword(data);
+        mgr.newPassword(vec[2], data);
+    }
+    else if(vec[1] == "change")
+    {
+        checkArgNum(4, "Usage: safe change [name|AEStype] <safename>\n");
+        if(vec[2] == "name")
+        {
+            std::cout << "Enter new name:\n";
+            std::string name;
+            std::cin >> name;
+            if(!mgr.changeSafeName(vec[3], name)) 
+                std::cout << "Safe does not exist!\n";
+        }
+        else if (vec[2] == "AEStype")
+        {
+            std::string type;
+            if(!inputAESType(type)) return;
+            if(!mgr.changeSafeAESType(vec[3], std::stoi(type)))
+                std::cout << "Safe does not exist!\n";
+        }
     }
 }
 

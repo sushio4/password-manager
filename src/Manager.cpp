@@ -17,6 +17,16 @@ void Manager::getPasswordList(std::vector<std::string>& list) const
     safes->getPasswordList(list);
 }
 
+void Manager::getSafeList(std::vector<std::string>& list) const
+{
+    safes->getSafeList(list);
+}
+
+void Manager::getSafePasswordList(std::vector<std::string>& list) const
+{
+    safes->getSafePasswordList(list);
+}
+
 std::string Manager::readPassword(const std::string& name) 
 {
     return safes->getPassword(name);
@@ -41,9 +51,9 @@ bool Manager::editPassword(const std::string& name, const std::vector<std::strin
     return safes->writePassword(name, data);
 }
 
-bool Manager::newPassword(const std::vector<std::string>& data)
+bool Manager::newPassword(const std::string& safename, const std::vector<std::string>& data)
 {
-    return safes->addPassword(data);
+    return safes->addPassword(safename, data);
 }
 
 bool Manager::loginLocal(const std::string& password)

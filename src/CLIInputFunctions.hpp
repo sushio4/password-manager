@@ -20,7 +20,7 @@ void inputGenArgs(args_t& args)
 
 bool inputPasswordName(std::string& name)
 {
-    std::cout << "Enter new name for this safe:\n";
+    std::cout << "Enter new name:\n";
     std::cin >> name;
     if(name == "")
     {
@@ -32,7 +32,7 @@ bool inputPasswordName(std::string& name)
 
 bool inputPassword(std::string& password, Manager& mgr)
 {
-    std::cout << "Enter new password for this safe (enter \"-\" to generate it):\n";
+    std::cout << "Enter new password (enter \"-\" to generate it):\n";
     std::cin >> password;
     
     if(password == "-")

@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include <utility>
 
-#include "hack_private.hpp"
-
 bool SafesModule::readSafeFile(const std::string& filename)
 {
     std::ifstream safeFile(filename, std::ios::in | std::ios::binary);
@@ -25,7 +23,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
     uint32_t passNum;
     if(
         !safeFile.read((char*)&keySize, 1) |
-        !(encryptedKey = new uint8_t[keySize]) |
+        !(encryptedKey = new uint8_t[keySize]) | //not necessary but I want to keep read functions in that if
         !safeFile.read((char*)&encryptedKey, keySize) |
         !safeFile.read((char*)&type, 1) |
         !safeFile.read((char*)&passNum, 4)
@@ -51,7 +49,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
         if(
             !safeFile.getline(name, 255, '\0')  |
             !safeFile.read((char*)&passSize, 1) |
-            !(password = new uint8_t[passSize]) |
+            !(password = new uint8_t[passSize]) | //not necessary but I want to keep read functions in that if
             !safeFile.read((char*)password, passSize)
         ){
             safeFile.close();
