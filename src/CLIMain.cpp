@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     else while(true)
     {
         //do stuff from stdin
-        std::cout << "Password manager\nEnter a command:\n";
+        std::cout << "\nPassword manager\nEnter a command:\n";
 
         args_t words;
         getInput(words);        
