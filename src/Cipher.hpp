@@ -19,6 +19,9 @@ public:
     //as this is the only class containing masterKey
     //it will be (en/de)crypting everything with those
     //using functions from inside the AES object
-    bool decrypt(AES& aes, const uint8_t* src, uint8_t* dest);
-    bool encrypt(AES& aes, const uint8_t* src, uint8_t* dest);
+    bool decryptKey(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+    bool encryptKey(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+
+    bool decryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+    bool encryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
 };
