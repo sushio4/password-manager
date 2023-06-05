@@ -7,6 +7,7 @@
 void SafesModule::closeSafe()
 {
     delete openSafe;
+    openSafe = nullptr;
 }
 
 bool SafesModule::removeSafeFile(const std::string& filename)
@@ -16,6 +17,8 @@ bool SafesModule::removeSafeFile(const std::string& filename)
 
 bool SafesModule::readSafeFile(const std::string& filename)
 {
+    if(openSafe) closeSafe();
+
     std::ifstream safeFile(filename, std::ios::in | std::ios::binary);
     if(!safeFile.is_open()) return false;
 
@@ -71,6 +74,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
 
         openSafe->add(name, password, passSize);
     }
+    safeFile.close();
     return true;
 }
 
@@ -99,6 +103,7 @@ bool SafesModule::writeSafeFile(const std::string& filename)
         safeFile.write((char*)&std::get<2>(element), 1);
         safeFile.write((char*)std::get<1>(element), std::get<2>(element));
     }
+    safeFile.close();
     return true;
 }
 
