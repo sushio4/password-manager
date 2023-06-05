@@ -97,11 +97,9 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
 
 bool SafesModule::addPassword(const std::string& safename, const std::vector<std::string>& data)
 {
-    if((std::string&)(*openSafe) != safename)
-    {
-        closeSafe();
-        readSafeFile(safename + ".safe");
-    }
+    if((std::string&)(*openSafe) != safename &&
+        !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
+        return false;
 
     uint8_t passLength = data[1].size();
     uint8_t* encryptedPassword = new uint8_t[passLength];
@@ -118,4 +116,24 @@ bool SafesModule::isInThatSafe(const std::string& passwordname)
 {
     //Safe::operator[](const std::string&) returns {nullptr, 0} if it's not there
     return (bool)(*openSafe)[passwordname].first; 
+}
+
+
+bool SafesModule::changeSafeName(const std::string& safename, const std::string& newname)
+{
+    if((std::string&)(*openSafe) != safename &&
+        !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
+        return false;
+
+    (std::string&)(*openSafe) = newname;
+    return true;
+}
+
+bool SafesModule::changeSafeAESType(const std::string& safename, int type)
+{
+    if((std::string&)(*openSafe) != safename &&
+        !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
+        return false;
+
+    return openSafe->changeAES((AESType)type);
 }

@@ -2,9 +2,9 @@
 
 Safe::Safe(AESType _type, uint8_t* _key, uint16_t _keyLength)
 {
-    type = _type;
     key = std::unique_ptr<uint8_t>(_key);
     keyLength = _keyLength;
+    changeAES(_type);
 }
 
 Safe::~Safe()
@@ -56,6 +56,38 @@ void Safe::getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, AESType& type)
     keyRef = new uint8_t[keyLength];
     lengthRef = keyLength;
     memcpy(keyRef, key.get(), keyLength);
+}
+
+bool Safe::changeAES(AESType _type)
+{
+    type = _type;
+    AES* ptr = nullptr;
+    switch(type)
+    {
+    case AES_128:
+        ptr = new AES128;
+        break;
+    case AES_192:
+        ptr = new AES192;
+        break;
+    case AES_256:
+        ptr = new AES256;
+        break;
+    case AES_128_CBC:
+        ptr = new AES128CBC;
+        break;
+    case AES_192_CBC:
+        ptr = new AES192CBC;
+        break;
+    case AES_256_CBC:
+        ptr = new AES256CBC;
+        break;
+    default:
+        return false;
+        break;
+    }
+    cipher.reset(ptr);
+    return true;
 }
 
 uint32_t Safe::size()

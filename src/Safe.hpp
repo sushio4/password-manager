@@ -35,6 +35,8 @@ public:
     bool add(const std::string& name, uint8_t* password, uint8_t passwordLength);
     bool change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength);
 
+    bool changeAES(AESType _type);
+
     auto operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>;
     auto operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8_t>;
 
