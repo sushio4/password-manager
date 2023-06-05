@@ -65,6 +65,55 @@ void SafesModule::getSafePasswordList(std::vector<std::string>& list)
         list.push_back(p.first + " : " + p.second);
 }
 
+bool SafesModule::modifyPassword(const std::string& name, const std::vector<std::string>& data)
+{
+    uint8_t passLength = data[1].size();
+    uint8_t* encryptedPassword = nullptr;
+    if(passLength)
+    {
+        encryptedPassword = new uint8_t[passLength];
+        if(! cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), encryptedPassword, passLength) )
+        {
+            delete[] encryptedPassword;
+            return false;
+        }
+    }
+
+    if(isInThatSafe(name))
+        return openSafe->change(name, data[0], encryptedPassword, passLength);
+
+    for(auto p : passFilePairs)
+    {
+        if(name == p.first)
+        {
+            closeSafe();
+            readSafeFile(p.second);
+            return openSafe->change(name, data[0], encryptedPassword, passLength);
+        }
+    }
+
+    return false;
+}
+
+bool SafesModule::addPassword(const std::string& safename, const std::vector<std::string>& data)
+{
+    if((std::string&)(*openSafe) != safename)
+    {
+        closeSafe();
+        readSafeFile(safename + ".safe");
+    }
+
+    uint8_t passLength = data[1].size();
+    uint8_t* encryptedPassword = new uint8_t[passLength];
+    if( !cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), encryptedPassword, passLength) )
+    {
+        delete[] encryptedPassword;
+        return false;
+    }
+
+    return openSafe->add(data[0], encryptedPassword, passLength);
+}
+
 bool SafesModule::isInThatSafe(const std::string& passwordname)
 {
     //Safe::operator[](const std::string&) returns {nullptr, 0} if it's not there
