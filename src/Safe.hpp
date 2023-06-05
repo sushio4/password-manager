@@ -32,7 +32,7 @@ public:
     Safe(AESType _type, uint8_t* _key, uint16_t _keyLength);
     ~Safe();
 
-    void add(std::string&& name, uint8_t* password, uint8_t passwordLength);
+    bool add(std::string&& name, uint8_t* password, uint8_t passwordLength);
     bool change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength);
 
     auto operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>;

@@ -13,11 +13,13 @@ Safe::~Safe()
         delete[] e;
 }
 
-void Safe::add(std::string&& name, uint8_t* password, uint8_t passwordLength)
+bool Safe::add(std::string&& name, uint8_t* password, uint8_t passwordLength)
 {
+    if((*this)[name].first) return false; //if the password already exists
     names.push_back(std::move(name));
     passwords.push_back(password);
     passLengths.push_back(passwordLength);
+    return true;
 }
 
 bool Safe::change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength)
