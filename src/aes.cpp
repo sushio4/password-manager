@@ -70,7 +70,7 @@ void AES::subWord(uint8_t (&word)[4]){
 
 void AES::invSubWord(uint8_t (&word)[4]){
     for(auto &v : word){
-        v - INVSBOX[v / 16][v % 16];
+        v = INVSBOX[v / 16][v % 16];
     }
 }
 
@@ -87,6 +87,7 @@ void AES::invSubWord(uint8_t (&word)[4]){
 //     }
 // }
 
+// it actually shifts columns XD but works so stays
 void AES::shiftRows(uint8_t (&chunk)[4][4]){
     // all rows at once from chunk not word
     for(int i = 1; i < 4; i++){
@@ -105,11 +106,16 @@ void AES::invShiftRows(uint8_t (&chunk)[4][4]){
     for(int i = 1; i < 4 ;i++){
         // so the ii is amount of shifts
         for(int ii = 0; ii < i ; ii++){
-            uint8_t buffer = chunk[i][3];
+            // uint8_t buffer = chunk[i][3];
+            // for(int iii = 3; iii > 0 ; iii--){
+            //     chunk[i][iii] = chunk[i][iii-1];
+            // }
+            // chunk[i][0] = buffer;
+            uint8_t buffer = chunk[3][i];
             for(int iii = 3; iii > 0 ; iii--){
-                chunk[i][iii] = chunk[i][iii-1];
+                chunk[iii][i] = chunk[iii-1][i];
             }
-            chunk[i][0] = buffer;
+            chunk[0][i] = buffer; 
         }
     }
 }
@@ -184,23 +190,43 @@ void AES::mixColumns(uint8_t (&chunk)[4][4]){
 
 }
 
+// void AES::invMixColumns(uint8_t (&chunk)[4][4]){
+//     uint8_t tmp[4][4];
+
+//     // lets try no static cast here huh?
+//     for(int i = 0; i < 4; i++){
+//         tmp[0][i] = mixColumnsMultiplicator(chunk[0][i], 14) ^ mixColumnsMultiplicator(chunk[1][i], 11) ^ mixColumnsMultiplicator(chunk[2][i], 13) ^ mixColumnsMultiplicator(chunk[3][i], 9);
+
+//         tmp[1][i] = mixColumnsMultiplicator(chunk[0][i], 9) ^ mixColumnsMultiplicator(chunk[1][i], 14) ^ mixColumnsMultiplicator(chunk[2][i], 11) ^ mixColumnsMultiplicator(chunk[3][i], 13);
+
+//         tmp[2][i] = mixColumnsMultiplicator(chunk[0][i], 13) ^ mixColumnsMultiplicator(chunk[1][i], 9) ^ mixColumnsMultiplicator(chunk[2][i], 14) ^ mixColumnsMultiplicator(chunk[3][i], 11);
+
+//         tmp[3][i] = mixColumnsMultiplicator(chunk[0][i], 11) ^ mixColumnsMultiplicator(chunk[1][i], 13) ^ mixColumnsMultiplicator(chunk[2][i], 9) ^ mixColumnsMultiplicator(chunk[3][i], 14);
+
+//         chunk[0][i] = tmp[0][i];
+//         chunk[1][i] = tmp[1][i];
+//         chunk[2][i] = tmp[2][i];
+//         chunk[3][i] = tmp[3][i];
+//     }
+// }
+
 void AES::invMixColumns(uint8_t (&chunk)[4][4]){
     uint8_t tmp[4][4];
 
     // lets try no static cast here huh?
     for(int i = 0; i < 4; i++){
-        tmp[0][i] = mixColumnsMultiplicator(chunk[0][i], 14) ^ mixColumnsMultiplicator(chunk[1][i], 11) ^ mixColumnsMultiplicator(chunk[2][i], 13) ^ mixColumnsMultiplicator(chunk[3][i], 9);
+        tmp[i][0] = mixColumnsMultiplicator(chunk[i][0], 14) ^ mixColumnsMultiplicator(chunk[i][1], 11) ^ mixColumnsMultiplicator(chunk[i][2], 13) ^ mixColumnsMultiplicator(chunk[i][3], 9);
 
-        tmp[1][i] = mixColumnsMultiplicator(chunk[0][i], 9) ^ mixColumnsMultiplicator(chunk[1][i], 14) ^ mixColumnsMultiplicator(chunk[2][i], 11) ^ mixColumnsMultiplicator(chunk[3][i], 13);
+        tmp[i][1] = mixColumnsMultiplicator(chunk[i][0], 9) ^ mixColumnsMultiplicator(chunk[i][1], 14) ^ mixColumnsMultiplicator(chunk[i][2], 11) ^ mixColumnsMultiplicator(chunk[i][3], 13);
 
-        tmp[2][i] = mixColumnsMultiplicator(chunk[0][i], 13) ^ mixColumnsMultiplicator(chunk[1][i], 9) ^ mixColumnsMultiplicator(chunk[2][i], 14) ^ mixColumnsMultiplicator(chunk[3][i], 11);
+        tmp[i][2] = mixColumnsMultiplicator(chunk[i][0], 13) ^ mixColumnsMultiplicator(chunk[i][1], 9) ^ mixColumnsMultiplicator(chunk[i][2], 14) ^ mixColumnsMultiplicator(chunk[i][3], 11);
 
-        tmp[3][i] = mixColumnsMultiplicator(chunk[0][i], 11) ^ mixColumnsMultiplicator(chunk[1][i], 13) ^ mixColumnsMultiplicator(chunk[2][i], 9) ^ mixColumnsMultiplicator(chunk[3][i], 14);
+        tmp[i][3] = mixColumnsMultiplicator(chunk[i][0], 11) ^ mixColumnsMultiplicator(chunk[i][1], 13) ^ mixColumnsMultiplicator(chunk[i][2], 9) ^ mixColumnsMultiplicator(chunk[i][3], 14);
 
-        chunk[0][i] = tmp[0][i];
-        chunk[1][i] = tmp[1][i];
-        chunk[2][i] = tmp[2][i];
-        chunk[3][i] = tmp[3][i];
+        chunk[i][0] = tmp[i][0];
+        chunk[i][1] = tmp[i][1];
+        chunk[i][2] = tmp[i][2];
+        chunk[i][3] = tmp[i][3];
     }
 }
 
@@ -406,15 +432,21 @@ uint8_t* AES128::decrypt(){
         // to work with dataLength like that we need padding mechanism fully functional
         for(int i = 0; i < dataLength ; i+=16){
             // addRoundKey step and reading to chunk
-            for(int ii = 0 ; ii < 4 ; ii++){
-                for(int iii = 0 ; iii < 4 ; iii++){
-//                    the last iii was ii (dunno if that made sigkill)
-                    chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + r*16 + ii*4 + iii);
-                }
+//             for(int ii = 0 ; ii < 4 ; ii++){
+//                 for(int iii = 0 ; iii < 4 ; iii++){
+// //                    the last iii was ii (dunno if that made sigkill)
+//                     chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + r*16 + ii*4 + iii);
+//                 }
+//             }
+
+        for(int ii = 0 ; ii < 4 ; ii++){
+            for(int iii = 0 ; iii < 4 ; iii++){
+                chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
             }
+        }
 
 
-            if(r != ROUNDCOUNT) invMixColumns(chunk);
+            if(r != 1) invMixColumns(chunk);
             invShiftRows(chunk);
 
             for(auto &c : chunk){
@@ -425,6 +457,12 @@ uint8_t* AES128::decrypt(){
                 for(int iii = 0; iii < 4 ; iii++){
 //                    *(decryptedData + +i + ii*4 + iii) = chunk[ii][iii];
                     *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
+                }
+            }
+            // there the reverse of the first step from encryption
+            if(r == ROUNDCOUNT){
+                for(int ii = i; ii < i+16 ; ii++){
+                    *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
                 }
             }
         }
