@@ -169,21 +169,47 @@ void AES::invMixColumns(uint8_t (&chunk)[4][4]){
 }
 
 // maybe we will drop from that idea
-void AES::generateSalt(){
+// generateSalt renamed to addSalt !
+void AES::addSalt(){
+    // it will have to delete actuall decryptedData and make it bigger
+    // no I have no idea how to perform that so walk around is being performed
+    // uint8_t newDecryptedData[dataLength + 16];
+    // delete[] this->decryptedData;
+    // // ok no fucking clue
+    // this->*decryptedData = &newDecryptedData;
+    uint8_t salt[16];
+    for (int i = 0; i < 16; i++) {
+        // key.push_back(std::byte(rand() % 256));
+        slat[i] = rand() % 256;
+    }
 
 }
 
+void AES::removeSalt(){
+
+}
+
+// fuck me I have to make another array and point to it after data passgae
 void AES::addPadding(){
-    // uint8_t sizof is 1
-    uint8_t padding_val = 15 - dataLength % 16;
+    // // uint8_t sizof is 1
+    // uint8_t padding_val = (15 - dataLength % 16) == 0 ? 16 : (15 - dataLength % 16);
+    // for(int i = 0; i < padding_val ; i++){
+    //     *(decryptedData + i) = padding_val;
+    // }
+    // dataLength += padding_val;
+
+    uint8_t padding_val = (15 - dataLength % 16) == 0 ? 16 : (15 - dataLength % 16);
+
     for(int i = 0; i < padding_val ; i++){
-        *(decryptedData + i) = padding_val;
+        *(encryptedData + this->dataLength + 16 + i) = padding_val;
     }
-    dataLength += padding_val;
+
+    this->dataLength += padding_val;
 }
 
 void AES::removePadding(){
     // i believe this can be done that simple
+    // the real removal will take place in decrypt functionality
     uint8_t padding_val = *(decryptedData + dataLength - 1);
     dataLength -= padding_val;
 }
@@ -197,7 +223,22 @@ AES128::AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
     // we will think about that -> what to do if not given and try to decode
     this->key = key;
     // ok that is what I need
-    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
+    // we add additional 16 lenght for goddamn salt and antoher 1 -> 16 for the padding
+
+    // i have no idea how to make it work the way i want
+
+    // ok encryptedData already have the slat and padding so if it is actually supplied it is ok
+
+    // remember to provide only one of those below at a time - it is pointless to append two (maybe add antoher constructor in the future)
+
+    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[16 + this->dataLength + (((16 - this->dataLength%16) % 16) == 0 ? 16 : (16-this->dataLength%16))] : encryptedData;
+    
+    // and what to do with that one huh? it might or might not have the goddamn salt and padding - depends on goddamn program's functionality
+
+    // ok we will assume that THERE IS NO PADDING AND SALT IN THE DECRYPTED DATA !!!!
+
+    // u need to change decryption to decrypt to the one state and then copy it to this goddamn array
+
     this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
 }
 
@@ -241,15 +282,17 @@ void AES128::expandKey(){
 }
 
 // should I make the key parameter set too?
-//uint8_t* AES128::generateKey(){
-//    uint8_t key[KEYLENGTH];
-//    for (int i = 0; i < KEYLENGTH; i++) {
-//        // key.push_back(std::byte(rand() % 256));
-//        *(key + i) = rand() % 256;
-//    }
-//    // change later
-//    return key;
-//}
+// yeah I should
+// well actually maybe that generate key only in AES?
+uint8_t* AES128::generateKey(){
+   uint8_t key[KEYLENGTH];
+   for (int i = 0; i < KEYLENGTH; i++) {
+       // key.push_back(std::byte(rand() % 256));
+       *(key + i) = rand() % 256;
+   }
+   this->key = key;
+   return key;
+}
 
 // ok so the encrypt method that works with self.key
 // OPTIMIZATION NEEDED
@@ -257,6 +300,12 @@ uint8_t* AES128::encrypt(){
 //    maybe make it faster by checking whether the expandedKey is generated already
     expandKey();
     uint8_t chunk[4][4];
+
+    // padding addition
+    // addPadding();
+
+    // // salt adding
+    // addSalt();
 
     for(int i = 0; i < dataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -345,6 +394,9 @@ uint8_t* AES128::decrypt(){
         }
     }
 
+    // well it just changes the data in dataLength so I think it is pointless somehow
+    // padding removal
+    // removePadding();
     return decryptedData;
 }
 
@@ -404,11 +456,21 @@ AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
     this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
 }
 
-// uint8_t* AES192::generateKey(){}
+uint8_t* AES192::generateKey(){
+   uint8_t key[KEYLENGTH];
+   for (int i = 0; i < KEYLENGTH; i++) {
+       // key.push_back(std::byte(rand() % 256));
+       *(key + i) = rand() % 256;
+   }
+   this->key = key;
+   return key;
+}
 
 uint8_t* AES192::encrypt(){
     expandKey();
     uint8_t chunk[4][4];
+
+    addPadding();
 
     for(int i = 0; i < dataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -491,6 +553,7 @@ uint8_t* AES192::decrypt(){
         }
     }
 
+    removePadding();
     return decryptedData;
 
 }
@@ -559,11 +622,21 @@ void AES256::expandKey(){
 }
 
 // for later thoughts
-// uint8_t* AES256::generateKey(){}
+uint8_t* AES256::generateKey(){
+   uint8_t key[KEYLENGTH];
+   for (int i = 0; i < KEYLENGTH; i++) {
+       // key.push_back(std::byte(rand() % 256));
+       *(key + i) = rand() % 256;
+   }
+   this->key = key;
+   return key;
+}
 
 uint8_t* AES256::encrypt(){
     expandKey();
     uint8_t chunk[4][4];
+
+    addPadding();
 
     for(int i = 0; i < dataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -662,6 +735,8 @@ uint8_t* AES256::decrypt(){
         }
         printf("\n");
     }
+
+    removePadding();
     return decryptedData;
 }
 

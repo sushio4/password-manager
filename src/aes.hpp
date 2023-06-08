@@ -34,7 +34,9 @@ protected:
     void invMixColumns(uint8_t (&chunk)[4][4]);
 
     virtual void expandKey() = 0;
-    void generateSalt();
+    // void generateSalt();
+    void addSalt();
+    void removeSalt();
     void addPadding();
     void removePadding();
 
