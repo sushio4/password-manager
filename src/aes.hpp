@@ -52,8 +52,8 @@ private:
     static const int ROUNDCOUNT = 10;
     static const int KEYLENGTH = 16;
 
-protected:
-// public:
+// protected:
+public:
     uint8_t expandedKey[176];
     void expandKey();
 
@@ -67,33 +67,41 @@ public:
     uint8_t* decrypt(uint8_t givenKey[16]);
 };
 
-// class AES192: public AES{
-// private:
-//     static const int ROUNDCOUNT = 12;
-//     static const int KEYLENGTH = 24;
+class AES192: public AES{
+private:
+    static const int ROUNDCOUNT = 12;
+    static const int KEYLENGTH = 24;
 
 // protected:
-//     uint8_t expandedKey[208];
-//     void expandKey();
+public:
+    // uint8_t expandedKey[208];
+    uint8_t expandedKey[216];
+    void expandKey();
 
-// public:
-//     AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
-//     uint8_t* generateKey();
-//     uint8_t* encrypt();
-//     uint8_t* encrypt(uint8_t givenKey[24]);
-//     uint8_t* decrypt();
-//     uint8_t* decrypt(uint8_t givenKey[24]);
+public:
+    // AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
+    AES192(long dataLength, uint8_t* key, uint8_t* encryptedData, uint8_t* decryptedData);
+    uint8_t* generateKey();
+    uint8_t* encrypt();
+    uint8_t* encrypt(uint8_t givenKey[24]);
+    uint8_t* decrypt();
+    uint8_t* decrypt(uint8_t givenKey[24]);
 
-// };
+};
 
 // more or less how it should be implemented
 class AES256: public AES{
 private:
+    // wtf while ROUNDCOUNT < 14 it works perfectly -> ROUNDCOUNT  = 14 - does not work at all
+    // static const int ROUNDCOUNT = 14;
     static const int ROUNDCOUNT = 14;
     static const int KEYLENGTH = 32;
 
-protected:
-    uint8_t expandedKey[240];
+// protected:
+public:
+    // burh 16 * 14 + 32  = 256 no 240
+    // uint8_t expandedKey[240];
+    uint8_t expandedKey[256];
     void expandKey();
 
 public:
