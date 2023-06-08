@@ -8,8 +8,8 @@
 #include <cstdint>
 
 class AES{
-// protected:
-public:
+protected:
+// public:
     uint8_t * key;
     uint8_t * salt;
     uint8_t * encryptedData;
@@ -52,14 +52,14 @@ private:
     static const int ROUNDCOUNT = 10;
     static const int KEYLENGTH = 16;
 
-// protected:
-public:
+protected:
+// public:
     uint8_t expandedKey[176];
     void expandKey();
 
 public:
 // dataLength added to constructor in each AES class
-    AES128(long dataLength, uint8_t* k, uint8_t* encryptedData, uint8_t* decryptedData);
+    AES128(long dataLength, uint8_t* key, uint8_t* encryptedData, uint8_t* decryptedData);
     //uint8_t* generateKey();
     uint8_t* encrypt();
     uint8_t* encrypt(uint8_t givenKey[16]);
@@ -86,24 +86,26 @@ public:
 
 // };
 
-// class AES256: public AES{
-// private:
-//     static const int ROUNDCOUNT = 14;
-//     static const int KEYLENGTH = 32;
+// more or less how it should be implemented
+class AES256: public AES{
+private:
+    static const int ROUNDCOUNT = 14;
+    static const int KEYLENGTH = 32;
 
-// protected:
-//     uint8_t expandedKey[240];
-//     void expandKey();
+protected:
+    uint8_t expandedKey[240];
+    void expandKey();
 
-// public:
-//     AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
-//     uint8_t* generateKey();
-//     uint8_t* encrypt();
-//     uint8_t* encrypt(uint8_t givenKey[32]);
-//     uint8_t* decrypt();
-//     uint8_t* decrypt(uint8_t givenKey[32]);
+public:
+    AES256(long dataLength, uint8_t* key, uint8_t* encryptedData, uint8_t* decryptedData);
+    // AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr);
+    uint8_t* generateKey();
+    uint8_t* encrypt();
+    uint8_t* encrypt(uint8_t givenKey[32]);
+    uint8_t* decrypt();
+    uint8_t* decrypt(uint8_t givenKey[32]);
 
-// };
+};
 
 // class AES128CBC: public AES128{
 // private:
