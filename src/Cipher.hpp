@@ -24,4 +24,7 @@ public:
 
     bool decryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
     bool encryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+
+private:
+    uint8_t* makeKey(std::string password);
 };
