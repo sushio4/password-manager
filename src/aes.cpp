@@ -177,14 +177,16 @@ void AES::addSalt(){
     // delete[] this->decryptedData;
     // // ok no fucking clue
     // this->*decryptedData = &newDecryptedData;
-    uint8_t salt[16];
+    // uint8_t salt[16];
     for (int i = 0; i < 16; i++) {
         // key.push_back(std::byte(rand() % 256));
-        slat[i] = rand() % 256;
+        // slat[i] = rand() % 256;
+        *(this->encryptedData + i) = rand() % 256;
     }
 
 }
 
+// if we need that - it will be not void
 void AES::removeSalt(){
 
 }
@@ -198,28 +200,33 @@ void AES::addPadding(){
     // }
     // dataLength += padding_val;
 
-    uint8_t padding_val = (15 - dataLength % 16) == 0 ? 16 : (15 - dataLength % 16);
+    uint8_t paddingVal = (15 - decDataLength % 16) == 0 ? 16 : (15 - decDataLength % 16);
 
-    for(int i = 0; i < padding_val ; i++){
-        *(encryptedData + this->dataLength + 16 + i) = padding_val;
+    for(int i = 1; i <= paddingVal ; i++){
+        // *(encryptedData + this->dataLength + 16 + i) = padding_val;
+
+        *(encryptedData + this->encDataLength - paddingVal + i) = paddingVal;
     }
 
-    this->dataLength += padding_val;
+    // this->dataLength += padding_val;
 }
 
-void AES::removePadding(){
-    // i believe this can be done that simple
-    // the real removal will take place in decrypt functionality
-    uint8_t padding_val = *(decryptedData + dataLength - 1);
-    dataLength -= padding_val;
-}
+// I believe there is no deed for that but we will see
+// void AES::removePadding(){
+//     // i believe this can be done that simple
+//     // the real removal will take place in decrypt functionality
+//     uint8_t paddingVal = *(decryptedData + dataLength - 1);
+//     dataLength -= paddingVal;
+// }
 
 // AES128 CLASS SECTION
 
 
+// another assumntion - you can provide only one: encrypted or decrypted data
+// remember now there are two dataLength vars
 AES128::AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
     // haha that one i forced to be here :)
-    this->dataLength = dataLength;
+    // this->dataLength = dataLength;
     // we will think about that -> what to do if not given and try to decode
     this->key = key;
     // ok that is what I need
@@ -231,7 +238,17 @@ AES128::AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
 
     // remember to provide only one of those below at a time - it is pointless to append two (maybe add antoher constructor in the future)
 
-    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[16 + this->dataLength + (((16 - this->dataLength%16) % 16) == 0 ? 16 : (16-this->dataLength%16))] : encryptedData;
+
+    if(encryptedData != nullptr){
+        this->encDataLength = dataLength;
+        // this->decDataLength = -1;
+        this->decDataLength = -1;
+    }else{
+        this->decDataLength = dataLength;
+        this->encDataLength = -1;
+    }
+
+    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[dataLength + (((16 - dataLength%16) % 16) == 0 ? 16 : (16-dataLength%16))] : encryptedData;
     
     // and what to do with that one huh? it might or might not have the goddamn salt and padding - depends on goddamn program's functionality
 
@@ -239,7 +256,14 @@ AES128::AES128(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
 
     // u need to change decryption to decrypt to the one state and then copy it to this goddamn array
 
-    this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
+    // encrypted data needs no padding tho
+    // this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
+
+    // that padding will be removed when decrypting so there is a need to change the whole encrypt and decrypt algorithms
+
+    // dataLength -> another problem
+    // when decryptedData is nullptr - dataLength includes salt and padding so there is no point in the above action
+    this->decryptedData = (decryptedData == nullptr) ? new uint8_t[dataLength] : decryptedData;
 }
 
 
@@ -301,20 +325,30 @@ uint8_t* AES128::encrypt(){
     expandKey();
     uint8_t chunk[4][4];
 
-    // padding addition
+    if(this->encDataLength == -1){
+        // this->encDataLength = 16 + this->decDataLength + ((this->decDataLength % 16) == 0 ? 16 : (this->decDataLength % 16));
+        
+        this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
+    }
+
+    // // padding addition
     // addPadding();
 
-    // // salt adding
+    // salt adding
+    // we are not adding salt in ECB
     // addSalt();
 
-    for(int i = 0; i < dataLength ; i++){
+    for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
     }
+
+    // padding addition
+    addPadding();
 
     // the round + last round (if before mix colums)
     for(int r = 1; r<=ROUNDCOUNT; r++){
         
-        for(int i = 0; i < dataLength ; i+=16){
+        for(int i = 0; i < this->encDataLength ; i+=16){
 
             // here is the first iteration of data xored with begin key
             if(r == 1){
@@ -351,7 +385,7 @@ uint8_t* AES128::encrypt(){
 }
 
 uint8_t* AES128::encrypt(uint8_t givenKey[16]){
-    key = givenKey;
+    this->key = givenKey;
     return encrypt();
 }
 
@@ -359,16 +393,30 @@ uint8_t* AES128::decrypt(){
     expandKey();
     uint8_t chunk[4][4];
 
-    for(int i = 0; i < dataLength ; i++){
-        *(decryptedData + i) = *(encryptedData + i);
+    // that make a need for decDataLength be more than just the data 
+    // ok here we will use the tmpData array
+    // do not forget to del at the end
+
+    uint8_t* tmpDataArray = new uint8_t[this->encDataLength];
+
+    // from now on in decryption process we will use tmpDataArray (padding needs to be reoved before decryptedData
+
+    // printf("\n\nENC DATA LENGTH: %i\n\n", this->encDataLength);
+
+    // printf("\n\ntmpDataArray internals check:\n\n");
+    for(int i = 0; i < this->encDataLength ; i++){
+        *(tmpDataArray + i) = *(encryptedData + i);
+        // printf("%X ", *(tmpDataArray + i));
     }
 
+    // all of this has to be done on tmpDataArray now !!!
+
     for(int r = 1 ; r <= ROUNDCOUNT; r++){
-        for(int i = 0; i < dataLength ; i+=16){
+        for(int i = 0; i < this->encDataLength ; i+=16){
 
             for(int ii = 0 ; ii < 4 ; ii++){
                 for(int iii = 0 ; iii < 4 ; iii++){
-                    chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+                    chunk[ii][iii] = *(tmpDataArray + i + ii*4 + iii) ^ *(expandedKey + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
                 }
             }
 
@@ -382,13 +430,13 @@ uint8_t* AES128::decrypt(){
 
             for(int ii = 0; ii < 4 ; ii++){
                 for(int iii = 0; iii < 4 ; iii++){
-                    *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
+                    *(tmpDataArray + i + ii*4 + iii) = chunk[ii][iii];
                 }
             }
             // there the reverse of the first step from encryption
             if(r == ROUNDCOUNT){
                 for(int ii = i; ii < i+16 ; ii++){
-                    *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
+                    *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
                 }
             }
         }
@@ -397,11 +445,26 @@ uint8_t* AES128::decrypt(){
     // well it just changes the data in dataLength so I think it is pointless somehow
     // padding removal
     // removePadding();
+
+    // remove padding within a process of copying data from tmpDataArray to decryptedData
+    if(this->decDataLength == -1){
+        uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
+        this->decDataLength = this->encDataLength - paddingVal;
+    }
+
+    for(int i = 0 ; i < this->decDataLength ; i++){
+
+        *(decryptedData + i) = *(tmpDataArray + i);
+
+    }
+
+    delete[] tmpDataArray;
+
     return decryptedData;
 }
 
 uint8_t* AES128::decrypt(uint8_t givenKey[16]){
-    key = givenKey;
+    this->key = givenKey;
     return decrypt();
 }
 
@@ -415,339 +478,339 @@ uint8_t* AES128::decrypt(uint8_t givenKey[16]){
 
 // // AES192 CLASS SECTION
 
-void AES192::expandKey(){
-    uint8_t tmp[4];
-    for(int i = 0 ; i < KEYLENGTH; i++){
-        expandedKey[i] = *(key + i);
-    }
-    int i = 0;
+// void AES192::expandKey(){
+//     uint8_t tmp[4];
+//     for(int i = 0 ; i < KEYLENGTH; i++){
+//         expandedKey[i] = *(key + i);
+//     }
+//     int i = 0;
 
-    // same as in 128 but with the gap of 6
-    // ok we will do the standard 4 elements way - gap 6
-    while(i < ROUNDCOUNT*16){
-        for(int ii = 0; ii < 4; ii++){
-            tmp[ii] = expandedKey[24 - 4 + ii + i];
-        }
+//     // same as in 128 but with the gap of 6
+//     // ok we will do the standard 4 elements way - gap 6
+//     while(i < ROUNDCOUNT*16){
+//         for(int ii = 0; ii < 4; ii++){
+//             tmp[ii] = expandedKey[24 - 4 + ii + i];
+//         }
 
-        if(i % 16 == 0){
-            uint8_t tmpAgain = tmp[0];
+//         if(i % 16 == 0){
+//             uint8_t tmpAgain = tmp[0];
 
-            for(int ii = 0 ; ii < 3 ; ii++){
-                tmp[ii] = SBOX[tmp[ii+1]/16][tmp[ii+1]%16];
-            }
+//             for(int ii = 0 ; ii < 3 ; ii++){
+//                 tmp[ii] = SBOX[tmp[ii+1]/16][tmp[ii+1]%16];
+//             }
 
-            tmp[3] = SBOX[tmpAgain/16][tmpAgain%16];
+//             tmp[3] = SBOX[tmpAgain/16][tmpAgain%16];
 
-            tmp[0] = tmp[0] ^ RCON[i/16 + 1];
-        }
+//             tmp[0] = tmp[0] ^ RCON[i/16 + 1];
+//         }
 
-        for(int ii = 0; ii < 4; ii ++){
-            expandedKey[24 + i + ii] = tmp[ii] ^ expandedKey[i + ii];
-        }
-        i += 4;
-    }
-}
+//         for(int ii = 0; ii < 4; ii ++){
+//             expandedKey[24 + i + ii] = tmp[ii] ^ expandedKey[i + ii];
+//         }
+//         i += 4;
+//     }
+// }
 
-AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
-    this->dataLength = dataLength;
-    this->key = key;
-    // prepared for padding
-    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
-    this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
-}
+// AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
+//     this->dataLength = dataLength;
+//     this->key = key;
+//     // prepared for padding
+//     this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
+//     this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
+// }
 
-uint8_t* AES192::generateKey(){
-   uint8_t key[KEYLENGTH];
-   for (int i = 0; i < KEYLENGTH; i++) {
-       // key.push_back(std::byte(rand() % 256));
-       *(key + i) = rand() % 256;
-   }
-   this->key = key;
-   return key;
-}
+// uint8_t* AES192::generateKey(){
+//    uint8_t key[KEYLENGTH];
+//    for (int i = 0; i < KEYLENGTH; i++) {
+//        // key.push_back(std::byte(rand() % 256));
+//        *(key + i) = rand() % 256;
+//    }
+//    this->key = key;
+//    return key;
+// }
 
-uint8_t* AES192::encrypt(){
-    expandKey();
-    uint8_t chunk[4][4];
+// uint8_t* AES192::encrypt(){
+//     expandKey();
+//     uint8_t chunk[4][4];
 
-    addPadding();
+//     addPadding();
 
-    for(int i = 0; i < dataLength ; i++){
-        *(encryptedData + i) = *(decryptedData + i);
-    }
+//     for(int i = 0; i < dataLength ; i++){
+//         *(encryptedData + i) = *(decryptedData + i);
+//     }
 
-    for(int r = 1; r<=ROUNDCOUNT; r++){
+//     for(int r = 1; r<=ROUNDCOUNT; r++){
         
-        for(int i = 0; i < dataLength ; i+=16){
+//         for(int i = 0; i < dataLength ; i+=16){
 
-            // here is the first iteration of data xored with begin key
-            if(r == 1){
-                for(int ii = i; ii < i+16 ; ii++){
-                    *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii%16);
-                }
-            }
+//             // here is the first iteration of data xored with begin key
+//             if(r == 1){
+//                 for(int ii = i; ii < i+16 ; ii++){
+//                     *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii%16);
+//                 }
+//             }
 
-            // that is on word [4]
-            for(int ii = 0 ; ii < 4 ; ii++){
-                for(int iii = 0 ; iii < 4 ; iii++){
-                    chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
-                }
-                subWord(chunk[ii]);
-            }
+//             // that is on word [4]
+//             for(int ii = 0 ; ii < 4 ; ii++){
+//                 for(int iii = 0 ; iii < 4 ; iii++){
+//                     chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+//                 }
+//                 subWord(chunk[ii]);
+//             }
 
-            shiftRows(chunk);
+//             shiftRows(chunk);
             
-            if(r != ROUNDCOUNT) mixColumns(chunk);
+//             if(r != ROUNDCOUNT) mixColumns(chunk);
 
-            // addRoundKey and finish the round for chunk of data
-            for(int ii = 0; ii < 4 ; ii++){
-                for(int iii = 0; iii < 4 ; iii++){
-                    *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 8 + r*16 + ii*4 + iii);
-                }
-            }
-        }
-    }
-    return encryptedData;
-}
+//             // addRoundKey and finish the round for chunk of data
+//             for(int ii = 0; ii < 4 ; ii++){
+//                 for(int iii = 0; iii < 4 ; iii++){
+//                     *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 8 + r*16 + ii*4 + iii);
+//                 }
+//             }
+//         }
+//     }
+//     return encryptedData;
+// }
 
-uint8_t* AES192::encrypt(uint8_t givenKey[24]){
-    this->key = givenKey;
-    return encrypt();
-}
-uint8_t* AES192::decrypt(){
-    expandKey();
-    uint8_t chunk[4][4];
+// uint8_t* AES192::encrypt(uint8_t givenKey[24]){
+//     this->key = givenKey;
+//     return encrypt();
+// }
+// uint8_t* AES192::decrypt(){
+//     expandKey();
+//     uint8_t chunk[4][4];
 
-    for(int i = 0; i < dataLength ; i++){
-        *(decryptedData + i) = *(encryptedData + i);
-    }
+//     for(int i = 0; i < dataLength ; i++){
+//         *(decryptedData + i) = *(encryptedData + i);
+//     }
 
-    for(int r = 1 ; r <= ROUNDCOUNT; r++){
-        for(int i = 0; i < dataLength ; i+=16){
+//     for(int r = 1 ; r <= ROUNDCOUNT; r++){
+//         for(int i = 0; i < dataLength ; i+=16){
 
-            for(int ii = 0 ; ii < 4 ; ii++){
-                for(int iii = 0 ; iii < 4 ; iii++){
-                    chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + 8 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
-                }
-            }
-
-
-            if(r != 1) invMixColumns(chunk);
-            invShiftRows(chunk);
-
-            for(auto &c : chunk){
-                invSubWord(c);
-            }
-
-            for(int ii = 0; ii < 4 ; ii++){
-                for(int iii = 0; iii < 4 ; iii++){
-                    *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
-                }
-            }
-            // there the reverse of the first step from encryption
-            if(r == ROUNDCOUNT){
-                for(int ii = i; ii < i+16 ; ii++){
-                    *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
-                }
-            }
-        }
-    }
-
-    removePadding();
-    return decryptedData;
-
-}
-uint8_t* AES192::decrypt(uint8_t givenKey[24]){
-    this->key = givenKey;
-    return decrypt();
-}
-
-// AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-// uint8_t* AES192CBC::generateKey(){}
-// uint8_t* AES192CBC::encrypt(){}
-// uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){}
-// uint8_t* AES192CBC::decrypt(){}
-// uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){}
-
-// // AES256 CLASS SECTION
-
-AES256::AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
-    // haha that one i forced to be here :)
-    this->dataLength = dataLength;
-    // we will think about that -> what to do if not given and try to decode
-    this->key = key;
-    // ok that is what I need
-    // prepared for padding
-    this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
-    this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
-}
-
-// I am not sure if that is the right way here
-// look fine to me
-void AES256::expandKey(){
-    // ROUNDCOUNT * KEYLENGTH + 16 actually so maybe later change will be ok
-    uint8_t tmp[4];
-
-    for(int i = 0; i < KEYLENGTH ; i++){
-        expandedKey[i] = *(key+i);
-    }
+//             for(int ii = 0 ; ii < 4 ; ii++){
+//                 for(int iii = 0 ; iii < 4 ; iii++){
+//                     chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + 8 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+//                 }
+//             }
 
 
-    int i = 0;
-    while(i < ROUNDCOUNT * 16){
-        for(int ii = 0; ii<4 ; ii++){
-            // this might be inacurrate
-            tmp[ii] = expandedKey[32 - 4 + ii + i];
-        }
+//             if(r != 1) invMixColumns(chunk);
+//             invShiftRows(chunk);
 
-        if(i % 16 == 0){
+//             for(auto &c : chunk){
+//                 invSubWord(c);
+//             }
 
-            uint8_t tmpAgain = tmp[0];
-            // subword on bytes
-            for(int ii = 0; ii < 3 ; ii++){
-                // why the fuck ii + 1? - so it was rotword and subword at once
-                tmp[ii] = SBOX[tmp[ii+1]/16][tmp[ii+1]%16];
-            }
-            tmp[3] = SBOX[tmpAgain/16][tmpAgain%16];
+//             for(int ii = 0; ii < 4 ; ii++){
+//                 for(int iii = 0; iii < 4 ; iii++){
+//                     *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
+//                 }
+//             }
+//             // there the reverse of the first step from encryption
+//             if(r == ROUNDCOUNT){
+//                 for(int ii = i; ii < i+16 ; ii++){
+//                     *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
+//                 }
+//             }
+//         }
+//     }
 
-            // xorwords and rcon 
-            tmp[0] = tmp[0] ^ RCON[i/16 + 1];
-        }
+//     removePadding();
+//     return decryptedData;
 
-        for(int ii = 0; ii < 4 ; ii++){
-            expandedKey[32 + i + ii] = tmp[ii] ^ expandedKey[i + ii];
-        }
-        i+=4;
-    }
-}
+// }
+// uint8_t* AES192::decrypt(uint8_t givenKey[24]){
+//     this->key = givenKey;
+//     return decrypt();
+// }
 
-// for later thoughts
-uint8_t* AES256::generateKey(){
-   uint8_t key[KEYLENGTH];
-   for (int i = 0; i < KEYLENGTH; i++) {
-       // key.push_back(std::byte(rand() % 256));
-       *(key + i) = rand() % 256;
-   }
-   this->key = key;
-   return key;
-}
+// // AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
+// // uint8_t* AES192CBC::generateKey(){}
+// // uint8_t* AES192CBC::encrypt(){}
+// // uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){}
+// // uint8_t* AES192CBC::decrypt(){}
+// // uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){}
 
-uint8_t* AES256::encrypt(){
-    expandKey();
-    uint8_t chunk[4][4];
+// // // AES256 CLASS SECTION
 
-    addPadding();
+// AES256::AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
+//     // haha that one i forced to be here :)
+//     this->dataLength = dataLength;
+//     // we will think about that -> what to do if not given and try to decode
+//     this->key = key;
+//     // ok that is what I need
+//     // prepared for padding
+//     this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
+//     this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
+// }
 
-    for(int i = 0; i < dataLength ; i++){
-        *(encryptedData + i) = *(decryptedData + i);
-    }
+// // I am not sure if that is the right way here
+// // look fine to me
+// void AES256::expandKey(){
+//     // ROUNDCOUNT * KEYLENGTH + 16 actually so maybe later change will be ok
+//     uint8_t tmp[4];
 
-    printf("\n");
-    for(int r = 1; r<=ROUNDCOUNT; r++){
-        for(int i = 0; i < dataLength; i+= 16){
-
-            // here is the first iteration of data xored with begin key
-            if(r == 1){
-                for(int ii = i; ii < i+16 ; ii++){
-                    *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii%16);
-                }
-            }
-
-            // that is on word [4]
-            for(int ii = 0 ; ii < 4 ; ii++){
-                for(int iii = 0 ; iii < 4 ; iii++){
-                    chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
-                }
-                subWord(chunk[ii]);
-
-            }
-
-            shiftRows(chunk);
-
-            if(r != ROUNDCOUNT) mixColumns(chunk);
+//     for(int i = 0; i < KEYLENGTH ; i++){
+//         expandedKey[i] = *(key+i);
+//     }
 
 
-            // addRoundKey and finish the round for chunk of data
-            for(int ii = 0; ii < 4 ; ii++){
-                for(int iii = 0; iii < 4 ; iii++){
-                    *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 16 + r*16 + ii*4 + iii);
-                }
-            }
-        }
-        for(int ii = 0 ; ii < 4 ; ii++){
-            for(auto c : chunk[ii]){
-                printf("%X ", c);
-            }
-        }
-        printf("\n");
-    }
-    return encryptedData;
-}
+//     int i = 0;
+//     while(i < ROUNDCOUNT * 16){
+//         for(int ii = 0; ii<4 ; ii++){
+//             // this might be inacurrate
+//             tmp[ii] = expandedKey[32 - 4 + ii + i];
+//         }
 
-uint8_t* AES256::encrypt(uint8_t givenKey[32]){
-    this->key = givenKey;
-    return encrypt();
-}
+//         if(i % 16 == 0){
 
-uint8_t* AES256::decrypt(){
-    expandKey();
-    uint8_t chunk[4][4];
+//             uint8_t tmpAgain = tmp[0];
+//             // subword on bytes
+//             for(int ii = 0; ii < 3 ; ii++){
+//                 // why the fuck ii + 1? - so it was rotword and subword at once
+//                 tmp[ii] = SBOX[tmp[ii+1]/16][tmp[ii+1]%16];
+//             }
+//             tmp[3] = SBOX[tmpAgain/16][tmpAgain%16];
 
-    for(int i = 0 ; i < dataLength ; i++){
-        *(decryptedData + i) = *(encryptedData + i);
-    }
+//             // xorwords and rcon 
+//             tmp[0] = tmp[0] ^ RCON[i/16 + 1];
+//         }
 
-    printf("\n");
-    for(int r = 1 ; r <= ROUNDCOUNT; r++){
-        for(int i = 0; i < dataLength; i+=16){
+//         for(int ii = 0; ii < 4 ; ii++){
+//             expandedKey[32 + i + ii] = tmp[ii] ^ expandedKey[i + ii];
+//         }
+//         i+=4;
+//     }
+// }
 
-            for(int ii = 0 ; ii < 4 ; ii++){
-                for(int iii = 0 ; iii < 4 ; iii++){
-                    chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + 16 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
-                }
-            }
+// // for later thoughts
+// uint8_t* AES256::generateKey(){
+//    uint8_t key[KEYLENGTH];
+//    for (int i = 0; i < KEYLENGTH; i++) {
+//        // key.push_back(std::byte(rand() % 256));
+//        *(key + i) = rand() % 256;
+//    }
+//    this->key = key;
+//    return key;
+// }
 
-            if(r != 1) invMixColumns(chunk);
-            invShiftRows(chunk);
+// uint8_t* AES256::encrypt(){
+//     expandKey();
+//     uint8_t chunk[4][4];
 
-            for(auto &c : chunk){
-                invSubWord(c);
-            }
+//     addPadding();
+
+//     for(int i = 0; i < dataLength ; i++){
+//         *(encryptedData + i) = *(decryptedData + i);
+//     }
+
+//     printf("\n");
+//     for(int r = 1; r<=ROUNDCOUNT; r++){
+//         for(int i = 0; i < dataLength; i+= 16){
+
+//             // here is the first iteration of data xored with begin key
+//             if(r == 1){
+//                 for(int ii = i; ii < i+16 ; ii++){
+//                     *(encryptedData + ii) = *(encryptedData + ii) ^ *(key + ii%16);
+//                 }
+//             }
+
+//             // that is on word [4]
+//             for(int ii = 0 ; ii < 4 ; ii++){
+//                 for(int iii = 0 ; iii < 4 ; iii++){
+//                     chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+//                 }
+//                 subWord(chunk[ii]);
+
+//             }
+
+//             shiftRows(chunk);
+
+//             if(r != ROUNDCOUNT) mixColumns(chunk);
 
 
-            for(int ii = 0; ii < 4 ; ii++){
-                for(int iii = 0; iii < 4 ; iii++){
-                    *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
-                }
-            }
-            // there the reverse of the first step from encryption
-            if(r == ROUNDCOUNT){
-                for(int ii = i; ii < i+16 ; ii++){
-                    *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
-                }
-            }
-        }
+//             // addRoundKey and finish the round for chunk of data
+//             for(int ii = 0; ii < 4 ; ii++){
+//                 for(int iii = 0; iii < 4 ; iii++){
+//                     *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 16 + r*16 + ii*4 + iii);
+//                 }
+//             }
+//         }
+//         for(int ii = 0 ; ii < 4 ; ii++){
+//             for(auto c : chunk[ii]){
+//                 printf("%X ", c);
+//             }
+//         }
+//         printf("\n");
+//     }
+//     return encryptedData;
+// }
 
-        for(int ii = 0 ; ii < 4 ; ii++){
-            for(auto c : chunk[ii]){
-                printf("%X ", c);
-            }
-        }
-        printf("\n");
-    }
+// uint8_t* AES256::encrypt(uint8_t givenKey[32]){
+//     this->key = givenKey;
+//     return encrypt();
+// }
 
-    removePadding();
-    return decryptedData;
-}
+// uint8_t* AES256::decrypt(){
+//     expandKey();
+//     uint8_t chunk[4][4];
 
-uint8_t* AES256::decrypt(uint8_t givenKey[32]){
-    this->key = givenKey;
-    return decrypt();
-}
+//     for(int i = 0 ; i < dataLength ; i++){
+//         *(decryptedData + i) = *(encryptedData + i);
+//     }
 
-// AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-// uint8_t* AES256CBC::generateKey(){}
-// uint8_t* AES256CBC::encrypt(){}
-// uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){}
-// uint8_t* AES256CBC::decrypt(){}
-// uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){}
+//     printf("\n");
+//     for(int r = 1 ; r <= ROUNDCOUNT; r++){
+//         for(int i = 0; i < dataLength; i+=16){
+
+//             for(int ii = 0 ; ii < 4 ; ii++){
+//                 for(int iii = 0 ; iii < 4 ; iii++){
+//                     chunk[ii][iii] = *(decryptedData + i + ii*4 + iii) ^ *(expandedKey + 16 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+//                 }
+//             }
+
+//             if(r != 1) invMixColumns(chunk);
+//             invShiftRows(chunk);
+
+//             for(auto &c : chunk){
+//                 invSubWord(c);
+//             }
+
+
+//             for(int ii = 0; ii < 4 ; ii++){
+//                 for(int iii = 0; iii < 4 ; iii++){
+//                     *(decryptedData + i + ii*4 + iii) = chunk[ii][iii];
+//                 }
+//             }
+//             // there the reverse of the first step from encryption
+//             if(r == ROUNDCOUNT){
+//                 for(int ii = i; ii < i+16 ; ii++){
+//                     *(decryptedData + ii) = *(decryptedData + ii) ^ *(key + ii%16);
+//                 }
+//             }
+//         }
+
+//         for(int ii = 0 ; ii < 4 ; ii++){
+//             for(auto c : chunk[ii]){
+//                 printf("%X ", c);
+//             }
+//         }
+//         printf("\n");
+//     }
+
+//     removePadding();
+//     return decryptedData;
+// }
+
+// uint8_t* AES256::decrypt(uint8_t givenKey[32]){
+//     this->key = givenKey;
+//     return decrypt();
+// }
+
+// // AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
+// // uint8_t* AES256CBC::generateKey(){}
+// // uint8_t* AES256CBC::encrypt(){}
+// // uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){}
+// // uint8_t* AES256CBC::decrypt(){}
+// // uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){}
