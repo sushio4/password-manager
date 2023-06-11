@@ -179,9 +179,7 @@ void AES::removeSalt(){
 
 // fuck me I have to make another array and point to it after data passgae
 void AES::addPadding(){
-    // // uint8_t sizof is 1
-
-    // uint8_t paddingVal = (15 - decDataLength % 16) == 0 ? 16 : (15 - decDataLength % 16);
+    // uint8_t sizof is 1
 
     uint8_t paddingVal = (16 - decDataLength % 16);
 
@@ -190,14 +188,6 @@ void AES::addPadding(){
         *(encryptedData + this->encDataLength - 1 - paddingVal + i) = paddingVal;
     }
 }
-
-// I believe there is no deed for that but we will see
-// void AES::removePadding(){
-//     // i believe this can be done that simple
-//     // the real removal will take place in decrypt functionality
-//     uint8_t paddingVal = *(decryptedData + dataLength - 1);
-//     dataLength -= paddingVal;
-// }
 
 // AES128 CLASS SECTION
 
@@ -269,7 +259,6 @@ uint8_t* AES128::generateKey(){
    uint8_t key[KEYLENGTH];
    srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
-       // key.push_back(std::byte(rand() % 256));
        *(key + i) = rand() % 256;
    }
    this->key = key;
@@ -284,8 +273,6 @@ uint8_t* AES128::encrypt(){
     uint8_t chunk[4][4];
 
     if(this->encDataLength == -1){
-        // this->encDataLength = 16 + this->decDataLength + ((this->decDataLength % 16) == 0 ? 16 : (this->decDataLength % 16));
-        
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
@@ -315,11 +302,9 @@ uint8_t* AES128::encrypt(){
             // that is on word [4]
             for(int ii = 0 ; ii < 4 ; ii++){
                 for(int iii = 0 ; iii < 4 ; iii++){
-//                    chunk[i][ii] = *(encryptedData + i + ii*4 + iii);
                     chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
-                    // printf("%X ", chunk[ii][iii]);
                 }
-//                ok so I see it sends it like a reference by default huh?
+                // ok so I see it sends it like a reference by default huh?
                 subWord(chunk[ii]);
             }
 
@@ -425,7 +410,6 @@ AES128CBC::AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* iv = null
 uint8_t*  AES128CBC::generateIv(){
     // here I am gonna cheat a little
     // iv is 128 bit :>
-    // uint8_t theIv[16] = generateKey();
     this->iv = generateKey();
     return this->iv;
 }
@@ -444,22 +428,10 @@ uint8_t* AES128CBC::encrypt(){
         *(encryptedData + 16 + i) = *(decryptedData + i);
     }
 
-    // printf("\nDECRYPTED BEFORE SALT:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
-
 
     // padding and salt
     addPadding();
     addSalt();
-
-    // printf("\nFULL BEFORE ENC:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
 
     // first blokc outside the loop
     for(int i = 0 ; i < 16; i++){
@@ -544,7 +516,6 @@ uint8_t* AES128CBC::decrypt(){
 
         // normal phase
 
-        // NOT REPAIRED - DO IN THE MORNING 
         for(int r = 1 ;r <= ROUNDCOUNT; r++){
 
             for(int ii = 0 ; ii < 4 ; ii++){
@@ -566,13 +537,6 @@ uint8_t* AES128CBC::decrypt(){
                     *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
                 }
             }
-            // there the reverse of the first step from encryption
-            // if(r == ROUNDCOUNT){
-            //     for(int ii = i-16; ii < i ; ii++){
-            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
-            //     }
-            // }
-
         }
 
         // xor phase
@@ -588,22 +552,9 @@ uint8_t* AES128CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
-    // from tmpDataArray to decryptedData
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
-
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
     }
-    
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
 
     delete [] tmpDataArray;
 
@@ -653,11 +604,8 @@ void AES192::expandKey(){
 
 
 AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
-    // this->dataLength = dataLength;
     this->key = key;
-    // // prepared for padding
-    // this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
-    // this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
+    // prepared for padding
 
     if(encryptedData != nullptr){
         this->encDataLength = dataLength;
@@ -788,11 +736,6 @@ uint8_t* AES192::decrypt(){
         uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
         this->decDataLength = this->encDataLength - paddingVal;
     }
-    
-    // printf("\ndecrypted with padding:\n");
-    // for(int i = 0 ; i < this->encDataLength ; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
 
     for(int i = 0 ; i < this->decDataLength ; i++){
 
@@ -836,22 +779,9 @@ uint8_t* AES192CBC::encrypt(){
         *(encryptedData + 16 + i) = *(decryptedData + i);
     }
 
-    // printf("\nDECRYPTED BEFORE SALT:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
-
-
     // padding and salt
     addPadding();
     addSalt();
-
-    // printf("\nFULL BEFORE ENC:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
 
     // first blokc outside the loop
     for(int i = 0 ; i < 16; i++){
@@ -936,7 +866,6 @@ uint8_t* AES192CBC::decrypt(){
 
         // normal phase
 
-        // NOT REPAIRED - DO IN THE MORNING 
         for(int r = 1 ;r <= ROUNDCOUNT; r++){
 
             for(int ii = 0 ; ii < 4 ; ii++){
@@ -958,13 +887,6 @@ uint8_t* AES192CBC::decrypt(){
                     *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
                 }
             }
-            // there the reverse of the first step from encryption
-            // if(r == ROUNDCOUNT){
-            //     for(int ii = i-16; ii < i ; ii++){
-            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
-            //     }
-            // }
-
         }
 
         // xor phase
@@ -981,22 +903,9 @@ uint8_t* AES192CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
-    // from tmpDataArray to decryptedData
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
-
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
     }
-    
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
 
     delete [] tmpDataArray;
 
@@ -1012,14 +921,8 @@ uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){
 // // AES256 CLASS SECTION
 
 AES256::AES256(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
-    // // haha that one i forced to be here :)
-    // this->dataLength = dataLength;
-    // // we will think about that -> what to do if not given and try to decode
+
     this->key = key;
-    // // ok that is what I need
-    // // prepared for padding
-    // this->encryptedData = (encryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : encryptedData;
-    // this->decryptedData = (decryptedData == nullptr) ? new uint8_t[this->dataLength + (16 - this->dataLength%16) % 16] : decryptedData;
 
     if(encryptedData != nullptr){
         this->encDataLength = dataLength;
@@ -1081,7 +984,6 @@ uint8_t* AES256::generateKey(){
    uint8_t key[KEYLENGTH];
    srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
-       // key.push_back(std::byte(rand() % 256));
        *(key + i) = rand() % 256;
    }
    this->key = key;
@@ -1093,7 +995,6 @@ uint8_t* AES256::encrypt(){
     uint8_t chunk[4][4];
 
     if(this->encDataLength == -1){
-        // this->encDataLength = 16 + this->decDataLength + ((this->decDataLength % 16) == 0 ? 16 : (this->decDataLength % 16));
         
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
@@ -1136,12 +1037,6 @@ uint8_t* AES256::encrypt(){
                 }
             }
         }
-        // for(int ii = 0 ; ii < 4 ; ii++){
-        //     for(auto c : chunk[ii]){
-        //         printf("%X ", c);
-        //     }
-        // }
-        // printf("\n");
     }
     return encryptedData;
 }
@@ -1160,7 +1055,6 @@ uint8_t* AES256::decrypt(){
     uint8_t* tmpDataArray = new uint8_t[this->encDataLength];
 
     for(int i = 0 ; i < this->encDataLength ; i++){
-        // *(decryptedData + i) = *(encryptedData + i);
         *(tmpDataArray + i) = *(encryptedData + i);
     }
 
@@ -1193,19 +1087,7 @@ uint8_t* AES256::decrypt(){
                 }
             }
         }
-
-        // for(int ii = 0 ; ii < 4 ; ii++){
-        //     for(auto c : chunk[ii]){
-        //         printf("%X ", c);
-        //     }
-        // }
-        // printf("\n");
     }
-
-    // printf("\ndecrypted with padding:\n");
-    // for(int i = 0 ; i < this->encDataLength ; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
 
     for(int i = 0 ; i < this->decDataLength ; i++){
 
@@ -1251,22 +1133,9 @@ uint8_t* AES256CBC::encrypt(){
         *(encryptedData + 16 + i) = *(decryptedData + i);
     }
 
-    // printf("\nDECRYPTED BEFORE SALT:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
-
-
     // padding and salt
     addPadding();
     addSalt();
-
-    // printf("\nFULL BEFORE ENC:\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(this->encryptedData + i));
-    // }
-    // printf("\n");
 
     // first blokc outside the loop
     for(int i = 0 ; i < 16; i++){
@@ -1373,13 +1242,6 @@ uint8_t* AES256CBC::decrypt(){
                     *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
                 }
             }
-            // there the reverse of the first step from encryption
-            // if(r == ROUNDCOUNT){
-            //     for(int ii = i-16; ii < i ; ii++){
-            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
-            //     }
-            // }
-
         }
 
         // xor phase
@@ -1388,7 +1250,6 @@ uint8_t* AES256CBC::decrypt(){
                 *(tmpDataArray + i - ii - 1) = *(tmpDataArray + i - ii - 1) ^ *(tmpDataArray - 16 + i - ii - 1);
             }
         }
-
     }
 
     // xor with iv
@@ -1396,22 +1257,9 @@ uint8_t* AES256CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
-    // from tmpDataArray to decryptedData
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
-
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
     }
-    
-    // printf("\n\nDECRYPTED FULL:\n\n");
-    // for(int i = 0 ; i < this->encDataLength; i++){
-    //     printf("%X ", *(tmpDataArray + i));
-    // }
-    // printf("\n");
 
     delete [] tmpDataArray;
 
