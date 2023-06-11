@@ -166,6 +166,7 @@ void AES::invMixColumns(uint8_t (&chunk)[4][4]){
 
 // generateSalt renamed to addSalt !
 void AES::addSalt(){
+    srand(time(0));
     for (int i = 0; i < 16; i++) {
         *(this->encryptedData + i) = rand() % 256;
     }
@@ -266,6 +267,7 @@ void AES128::expandKey(){
 // well actually maybe that generate key only in AES?
 uint8_t* AES128::generateKey(){
    uint8_t key[KEYLENGTH];
+   srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        // key.push_back(std::byte(rand() % 256));
        *(key + i) = rand() % 256;
@@ -413,13 +415,206 @@ uint8_t* AES128::decrypt(uint8_t givenKey[16]){
     return decrypt();
 }
 
+// I really hope this will work :>
+// it cannot work that way cuz fucking salt :<
+AES128CBC::AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* iv = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr) : AES128(dataLength, key, encryptedData, decryptedData){
+    this->iv = iv;
+}
 
-// AES128CBC::AES128CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
 // uint8_t* AES128CBC::generateKey(){}
-// uint8_t* AES128CBC::encrypt(){}
-// uint8_t* AES128CBC::encrypt(uint8_t givenKey[16], uint8_t iv[16]){}
-// uint8_t* AES128CBC::decrypt(){}
-// uint8_t* AES128CBC::decrypt(uint8_t givenKey[16], uint8_t iv[16]){}
+uint8_t*  AES128CBC::generateIv(){
+    // here I am gonna cheat a little
+    // iv is 128 bit :>
+    // uint8_t theIv[16] = generateKey();
+    this->iv = generateKey();
+    return this->iv;
+}
+
+// ok so encrypt works like the 128 with one difference (xor with previous block before the whole operation and the first block is xored with iv)
+uint8_t* AES128CBC::encrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    // padding and salt 
+    if(this->encDataLength == -1){
+       this->encDataLength = this->decDataLength + 16 + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
+    }
+
+    for(int i = 0; i < this->decDataLength ; i++){
+        *(encryptedData + 16 + i) = *(decryptedData + i);
+    }
+
+    // printf("\nDECRYPTED BEFORE SALT:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+
+    // padding and salt
+    addPadding();
+    addSalt();
+
+    // printf("\nFULL BEFORE ENC:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+    // first blokc outside the loop
+    for(int i = 0 ; i < 16; i++){
+        *(this->encryptedData + i) = *(this->encryptedData + i) ^ *(this->iv + i);
+    }
+
+    // we do not need any xoring with the key itself anymore in first round because of iv
+
+
+    for(int r = 1; r<=ROUNDCOUNT; r++){
+        for(int ii = 0 ; ii < 4 ; ii++){
+            for(int iii = 0 ; iii < 4 ; iii++){
+                chunk[ii][iii] = *(encryptedData + ii*4 + iii);
+            }
+            subWord(chunk[ii]);
+        }
+
+        shiftRows(chunk);
+            
+        if(r != ROUNDCOUNT) mixColumns(chunk);
+
+        for(int ii = 0; ii < 4 ; ii++){
+            for(int iii = 0; iii < 4 ; iii++){
+                *(encryptedData + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + r*16 + ii*4 + iii);
+            }
+        }
+    }
+
+    for(int i = 16 ; i < this->encDataLength; i+=16){
+
+        // xor phase - CBC moments
+
+        for(int ii = 0 ; ii < 16; ii++){
+            *(this->encryptedData + i + ii) = *(this->encryptedData + i + ii) ^ *(this->encryptedData - 16 + i + ii);
+        }
+
+        // standard phase
+
+        for(int r = 1; r <= ROUNDCOUNT; r++){
+            
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+                }
+                subWord(chunk[ii]);
+            }
+
+            shiftRows(chunk);
+            
+            if(r != ROUNDCOUNT) mixColumns(chunk);
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + r*16 + ii*4 + iii);
+                }
+            }
+        }
+    }
+
+    return this->encryptedData;
+}
+
+uint8_t* AES128CBC::encrypt(uint8_t givenKey[16], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return encrypt();
+}
+
+uint8_t* AES128CBC::decrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    uint8_t* tmpDataArray = new uint8_t[this->encDataLength];
+
+    for(int i = 0 ; i < this->encDataLength ; i++){
+        *(tmpDataArray + i) = *(encryptedData + i);
+    }
+
+    // all the dataBlocks excluding the first one
+    // we will do i > 0 because of redundancy
+    for(int i = this->encDataLength; i > 0; i-=16){
+
+        // normal phase
+
+        // NOT REPAIRED - DO IN THE MORNING 
+        for(int r = 1 ;r <= ROUNDCOUNT; r++){
+
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(tmpDataArray + i - 16 + ii*4 + iii) ^ *(expandedKey + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+                }
+            }
+
+
+            if(r != 1) invMixColumns(chunk);
+            invShiftRows(chunk);
+
+            for(auto &c : chunk){
+                invSubWord(c);
+            }
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
+                }
+            }
+            // there the reverse of the first step from encryption
+            // if(r == ROUNDCOUNT){
+            //     for(int ii = i-16; ii < i ; ii++){
+            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
+            //     }
+            // }
+
+        }
+
+        // xor phase
+        if(i > 16){
+            for(int ii = 0 ; ii < 16; ii++){
+                *(tmpDataArray + i - ii - 1) = *(tmpDataArray + i - ii - 1) ^ *(tmpDataArray - 16 + i - ii - 1);
+            }
+        }
+
+    }
+
+    for(int i = 0 ; i < 16; i++){
+        *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
+    }
+
+    // from tmpDataArray to decryptedData
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    for(int i = 16 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    }
+    
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    delete [] tmpDataArray;
+
+    return this->decryptedData;
+}
+
+uint8_t* AES128CBC::decrypt(uint8_t givenKey[16], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return decrypt();
+}
 
 // AES192 CLASS SECTION
 
@@ -456,6 +651,7 @@ void AES192::expandKey(){
     }
 }
 
+
 AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr){
     // this->dataLength = dataLength;
     this->key = key;
@@ -481,6 +677,7 @@ AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
 
 uint8_t* AES192::generateKey(){
    uint8_t key[KEYLENGTH];
+   srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        // key.push_back(std::byte(rand() % 256));
        *(key + i) = rand() % 256;
@@ -613,12 +810,204 @@ uint8_t* AES192::decrypt(uint8_t givenKey[24]){
     return decrypt();
 }
 
-// AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-// uint8_t* AES192CBC::generateKey(){}
-// uint8_t* AES192CBC::encrypt(){}
-// uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){}
-// uint8_t* AES192CBC::decrypt(){}
-// uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){}
+
+AES192CBC::AES192CBC(long dataLength, uint8_t* key = nullptr, uint8_t* iv = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr) : AES192(dataLength, key, encryptedData, decryptedData){
+    this->iv = iv;
+}
+
+uint8_t* AES192CBC::generateIv(){
+    srand(time(0));
+    for(int i = 0 ; i < 16; i++){
+        *(this->iv + i) = rand() % 256;
+    }
+    return this->iv;
+}
+
+uint8_t* AES192CBC::encrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    // padding and salt 
+    if(this->encDataLength == -1){
+       this->encDataLength = this->decDataLength + 16 + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
+    }
+
+    for(int i = 0; i < this->decDataLength ; i++){
+        *(encryptedData + 16 + i) = *(decryptedData + i);
+    }
+
+    // printf("\nDECRYPTED BEFORE SALT:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+
+    // padding and salt
+    addPadding();
+    addSalt();
+
+    // printf("\nFULL BEFORE ENC:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+    // first blokc outside the loop
+    for(int i = 0 ; i < 16; i++){
+        *(this->encryptedData + i) = *(this->encryptedData + i) ^ *(this->iv + i);
+    }
+
+    // we do not need any xoring with the key itself anymore in first round because of iv
+
+
+    for(int r = 1; r<=ROUNDCOUNT; r++){
+        for(int ii = 0 ; ii < 4 ; ii++){
+            for(int iii = 0 ; iii < 4 ; iii++){
+                chunk[ii][iii] = *(encryptedData + ii*4 + iii);
+            }
+            subWord(chunk[ii]);
+        }
+
+        shiftRows(chunk);
+            
+        if(r != ROUNDCOUNT) mixColumns(chunk);
+
+        for(int ii = 0; ii < 4 ; ii++){
+            for(int iii = 0; iii < 4 ; iii++){
+                *(encryptedData + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 8 + r*16 + ii*4 + iii);
+            }
+        }
+    }
+
+    for(int i = 16 ; i < this->encDataLength; i+=16){
+
+        // xor phase - CBC moments
+
+        for(int ii = 0 ; ii < 16; ii++){
+            *(this->encryptedData + i + ii) = *(this->encryptedData + i + ii) ^ *(this->encryptedData - 16 + i + ii);
+        }
+
+        // standard phase
+
+        for(int r = 1; r <= ROUNDCOUNT; r++){
+            
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+                }
+                subWord(chunk[ii]);
+            }
+
+            shiftRows(chunk);
+            
+            if(r != ROUNDCOUNT) mixColumns(chunk);
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 8 + r*16 + ii*4 + iii);
+                }
+            }
+        }
+    }
+
+    return this->encryptedData;
+}
+
+uint8_t* AES192CBC::encrypt(uint8_t givenKey[24], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return encrypt();
+}
+
+uint8_t* AES192CBC::decrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    uint8_t* tmpDataArray = new uint8_t[this->encDataLength];
+
+    for(int i = 0 ; i < this->encDataLength ; i++){
+        *(tmpDataArray + i) = *(encryptedData + i);
+    }
+
+    // all the dataBlocks excluding the first one
+    // we will do i > 0 because of redundancy
+    for(int i = this->encDataLength; i > 0; i-=16){
+
+        // normal phase
+
+        // NOT REPAIRED - DO IN THE MORNING 
+        for(int r = 1 ;r <= ROUNDCOUNT; r++){
+
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(tmpDataArray + i - 16 + ii*4 + iii) ^ *(expandedKey + 8 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+                }
+            }
+
+
+            if(r != 1) invMixColumns(chunk);
+            invShiftRows(chunk);
+
+            for(auto &c : chunk){
+                invSubWord(c);
+            }
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
+                }
+            }
+            // there the reverse of the first step from encryption
+            // if(r == ROUNDCOUNT){
+            //     for(int ii = i-16; ii < i ; ii++){
+            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
+            //     }
+            // }
+
+        }
+
+        // xor phase
+        if(i > 16){
+            for(int ii = 0 ; ii < 16; ii++){
+                *(tmpDataArray + i - ii - 1) = *(tmpDataArray + i - ii - 1) ^ *(tmpDataArray - 16 + i - ii - 1);
+            }
+        }
+
+    }
+
+    // xor with iv
+    for(int i = 0 ; i < 16; i++){
+        *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
+    }
+
+    // from tmpDataArray to decryptedData
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    for(int i = 16 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    }
+    
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    delete [] tmpDataArray;
+
+    return this->decryptedData;
+}
+
+uint8_t* AES192CBC::decrypt(uint8_t givenKey[24], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return decrypt();
+}
 
 // // AES256 CLASS SECTION
 
@@ -690,6 +1079,7 @@ void AES256::expandKey(){
 // for later thoughts
 uint8_t* AES256::generateKey(){
    uint8_t key[KEYLENGTH];
+   srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        // key.push_back(std::byte(rand() % 256));
        *(key + i) = rand() % 256;
@@ -833,9 +1223,203 @@ uint8_t* AES256::decrypt(uint8_t givenKey[32]){
     return decrypt();
 }
 
-// AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr, uint8_t * iv = nullptr){}
-// uint8_t* AES256CBC::generateKey(){}
-// uint8_t* AES256CBC::encrypt(){}
-// uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){}
-// uint8_t* AES256CBC::decrypt(){}
-// uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){}
+
+
+
+AES256CBC::AES256CBC(long dataLength, uint8_t* key = nullptr, uint8_t* iv = nullptr, uint8_t* encryptedData = nullptr, uint8_t* decryptedData = nullptr) : AES256(dataLength, key, encryptedData, decryptedData){
+    this->iv = iv;
+}
+
+uint8_t* AES256CBC::generateIv(){
+    srand(time(0));
+    for(int i = 0 ; i < 16; i++){
+        *(this->iv + i) = rand() % 256;
+    }
+    return this->iv;
+}
+
+uint8_t* AES256CBC::encrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    // padding and salt 
+    if(this->encDataLength == -1){
+       this->encDataLength = this->decDataLength + 16 + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
+    }
+
+    for(int i = 0; i < this->decDataLength ; i++){
+        *(encryptedData + 16 + i) = *(decryptedData + i);
+    }
+
+    // printf("\nDECRYPTED BEFORE SALT:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+
+    // padding and salt
+    addPadding();
+    addSalt();
+
+    // printf("\nFULL BEFORE ENC:\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(this->encryptedData + i));
+    // }
+    // printf("\n");
+
+    // first blokc outside the loop
+    for(int i = 0 ; i < 16; i++){
+        *(this->encryptedData + i) = *(this->encryptedData + i) ^ *(this->iv + i);
+    }
+
+    // we do not need any xoring with the key itself anymore in first round because of iv
+
+
+    for(int r = 1; r<=ROUNDCOUNT; r++){
+        for(int ii = 0 ; ii < 4 ; ii++){
+            for(int iii = 0 ; iii < 4 ; iii++){
+                chunk[ii][iii] = *(encryptedData + ii*4 + iii);
+            }
+            subWord(chunk[ii]);
+        }
+
+        shiftRows(chunk);
+            
+        if(r != ROUNDCOUNT) mixColumns(chunk);
+
+        for(int ii = 0; ii < 4 ; ii++){
+            for(int iii = 0; iii < 4 ; iii++){
+                *(encryptedData + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 16 + r*16 + ii*4 + iii);
+            }
+        }
+    }
+
+    for(int i = 16 ; i < this->encDataLength; i+=16){
+
+        // xor phase - CBC moments
+
+        for(int ii = 0 ; ii < 16; ii++){
+            *(this->encryptedData + i + ii) = *(this->encryptedData + i + ii) ^ *(this->encryptedData - 16 + i + ii);
+        }
+
+        // standard phase
+
+        for(int r = 1; r <= ROUNDCOUNT; r++){
+            
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(encryptedData + i + ii*4 + iii);
+                }
+                subWord(chunk[ii]);
+            }
+
+            shiftRows(chunk);
+            
+            if(r != ROUNDCOUNT) mixColumns(chunk);
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(encryptedData + i + ii*4 + iii) = chunk[ii][iii] ^ *(expandedKey + 16 + r*16 + ii*4 + iii);
+                }
+            }
+        }
+    }
+
+    return this->encryptedData;
+}
+
+uint8_t* AES256CBC::encrypt(uint8_t givenKey[32], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return encrypt();
+}
+
+uint8_t* AES256CBC::decrypt(){
+    expandKey();
+    uint8_t chunk[4][4];
+
+    uint8_t* tmpDataArray = new uint8_t[this->encDataLength];
+
+    for(int i = 0 ; i < this->encDataLength ; i++){
+        *(tmpDataArray + i) = *(encryptedData + i);
+    }
+
+    // all the dataBlocks excluding the first one
+    // we will do i > 0 because of redundancy
+    for(int i = this->encDataLength; i > 0; i-=16){
+
+        // normal phase
+
+        // NOT REPAIRED - DO IN THE MORNING 
+        for(int r = 1 ;r <= ROUNDCOUNT; r++){
+
+            for(int ii = 0 ; ii < 4 ; ii++){
+                for(int iii = 0 ; iii < 4 ; iii++){
+                    chunk[ii][iii] = *(tmpDataArray + i - 16 + ii*4 + iii) ^ *(expandedKey + 16 + (ROUNDCOUNT + 1 - r)*16 + ii*4 + iii);
+                }
+            }
+
+
+            if(r != 1) invMixColumns(chunk);
+            invShiftRows(chunk);
+
+            for(auto &c : chunk){
+                invSubWord(c);
+            }
+
+            for(int ii = 0; ii < 4 ; ii++){
+                for(int iii = 0; iii < 4 ; iii++){
+                    *(tmpDataArray - 16 + i + ii*4 + iii) = chunk[ii][iii];
+                }
+            }
+            // there the reverse of the first step from encryption
+            // if(r == ROUNDCOUNT){
+            //     for(int ii = i-16; ii < i ; ii++){
+            //         *(tmpDataArray + ii) = *(tmpDataArray + ii) ^ *(key + ii%16);
+            //     }
+            // }
+
+        }
+
+        // xor phase
+        if(i > 16){
+            for(int ii = 0 ; ii < 16; ii++){
+                *(tmpDataArray + i - ii - 1) = *(tmpDataArray + i - ii - 1) ^ *(tmpDataArray - 16 + i - ii - 1);
+            }
+        }
+
+    }
+
+    // xor with iv
+    for(int i = 0 ; i < 16; i++){
+        *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
+    }
+
+    // from tmpDataArray to decryptedData
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    for(int i = 16 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    }
+    
+    // printf("\n\nDECRYPTED FULL:\n\n");
+    // for(int i = 0 ; i < this->encDataLength; i++){
+    //     printf("%X ", *(tmpDataArray + i));
+    // }
+    // printf("\n");
+
+    delete [] tmpDataArray;
+
+    return this->decryptedData;
+}
+
+uint8_t* AES256CBC::decrypt(uint8_t givenKey[32], uint8_t iv[16]){
+    this->iv = iv;
+    this->key = givenKey;
+    return decrypt();
+}
