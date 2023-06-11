@@ -52,6 +52,9 @@ public:
     virtual uint8_t* encrypt(uint8_t givenKey[16]) = 0;
     virtual uint8_t* decrypt() = 0;
     virtual uint8_t* decrypt(uint8_t givenKey[16]) = 0;
+
+    uint8_t* encrypt(uint8_t* givenData, long length);
+    uint8_t* decrypt(uint8_t* givenData, long length);
 };
 
 class AES128: public AES{

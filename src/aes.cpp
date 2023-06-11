@@ -1,5 +1,6 @@
 #include "aes.hpp"
 #include <cstdlib>
+#include <ctime>
 
 // SECTION FOR MAIN AES CLASS
 
@@ -187,6 +188,22 @@ void AES::addPadding(){
 
         *(encryptedData + this->encDataLength - 1 - paddingVal + i) = paddingVal;
     }
+}
+
+uint8_t* AES::encrypt(uint8_t* givenData, long length)
+{
+    delete[] decryptedData;
+    decryptedData = givenData;
+    decDataLength = length;
+    return encrypt();
+}
+
+uint8_t* AES::decrypt(uint8_t* givenData, long length)
+{
+    delete[] encryptedData;
+    encryptedData = givenData;
+    encDataLength = length;
+    return decrypt();
 }
 
 // AES128 CLASS SECTION
@@ -1005,7 +1022,6 @@ uint8_t* AES256::encrypt(){
 
     addPadding();
 
-    printf("\n");
     for(int r = 1; r<=ROUNDCOUNT; r++){
         for(int i = 0; i < this->encDataLength; i+= 16){
 
