@@ -21,7 +21,7 @@ bool CipherModule::validatePassword(const std::string& password)
     {
         //first time login
         std::ofstream valFile("val.bin");
-        AES256 aes(masterKey, nullptr, (uint8_t*)"magic_value");
+        AES256 aes(11, masterKey, nullptr, (uint8_t*)"magic_value");
         auto encrypted = aes.encrypt();
         valFile << (char*)encrypted;
         valFile.close();
@@ -31,7 +31,7 @@ bool CipherModule::validatePassword(const std::string& password)
     std::string encrypted;
     valFile >> encrypted;
 
-    AES256 aes(masterKey, (uint8_t*)encrypted.c_str(), nullptr);
+    AES256 aes(11, masterKey, (uint8_t*)encrypted.c_str(), nullptr);
     std::string decrypted = (char*)aes.decrypt();
 
     return validated = (decrypted == "magic_value");

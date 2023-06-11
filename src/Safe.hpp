@@ -27,15 +27,15 @@ private:
     std::unique_ptr<AES> cipher;
     AESType type;
     std::unique_ptr<uint8_t> key;
+    std::unique_ptr<uint8_t> iv;
     uint16_t keyLength;
+    uint16_t ivLength;
 public:
-    Safe(AESType _type, uint8_t* _key, uint16_t _keyLength);
+    Safe(AESType _type, uint8_t* _key, uint8_t* _iv);
     ~Safe();
 
     bool add(const std::string& name, uint8_t* password, uint8_t passwordLength);
     bool change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength);
-
-    bool changeAES(AESType _type);
 
     auto operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>;
     auto operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8_t>;
@@ -43,7 +43,7 @@ public:
     explicit operator std::string&()
     { return name; }
 
-    void getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, AESType& type);
+    void getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, uint8_t*& ivRef, uint16_t& ivSizeRef, AESType& typeRef);
     AES& cipherObjRef() {return *cipher;};
 
     uint32_t size();

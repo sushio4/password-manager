@@ -34,8 +34,7 @@ std::string SafesModule::getPassword(const std::string& name)
         if(!encrypted.first) return "Error that should not occur. List file lied about password's location!";
     }
     //decrypting
-    uint8_t* decrypted = new uint8_t[encrypted.second];
-    cipher->decryptPassword(openSafe->cipherObjRef(), encrypted.first, decrypted, encrypted.second);
+    auto decrypted = cipher->decryptPassword(openSafe->cipherObjRef(), encrypted.first, encrypted.second);
 
     std::string password((const char*)decrypted);
     delete[] decrypted;
@@ -71,12 +70,9 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
     uint8_t* encryptedPassword = nullptr;
     if(passLength)
     {
-        encryptedPassword = new uint8_t[passLength];
-        if(! cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), encryptedPassword, passLength) )
-        {
-            delete[] encryptedPassword;
+        encryptedPassword = cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), passLength);
+        if(!encryptedPassword)
             return false;
-        }
     }
 
     if(isInThatSafe(name))
@@ -102,12 +98,10 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
         return false;
 
     uint8_t passLength = data[1].size();
-    uint8_t* encryptedPassword = new uint8_t[passLength];
-    if( !cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), encryptedPassword, passLength) )
-    {
-        delete[] encryptedPassword;
+    auto encryptedPassword = cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), passLength);
+
+    if(!encryptedPassword)
         return false;
-    }
 
     return openSafe->add(data[0], encryptedPassword, passLength);
 }
@@ -127,13 +121,4 @@ bool SafesModule::changeSafeName(const std::string& safename, const std::string&
 
     (std::string&)(*openSafe) = newname;
     return true;
-}
-
-bool SafesModule::changeSafeAESType(const std::string& safename, int type)
-{
-    if((std::string&)(*openSafe) != safename &&
-        !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
-        return false;
-
-    return openSafe->changeAES((AESType)type);
 }

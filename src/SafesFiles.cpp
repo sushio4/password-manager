@@ -33,12 +33,21 @@ bool SafesModule::readSafeFile(const std::string& filename)
 
     uint16_t keySize = 0;
     uint8_t* encryptedKey;
+
+    uint16_t ivSize = 0;
+    uint8_t* iv;
+
     AESType type;
     uint32_t passNum;
     if(
-        !safeFile.read((char*)&keySize, 1) |
+        !safeFile.read((char*)&keySize, 2) |
         !(encryptedKey = new uint8_t[keySize]) | //not necessary but I want to keep read functions in that if
-        !safeFile.read((char*)&encryptedKey, keySize) |
+        !safeFile.read((char*)encryptedKey, keySize) |
+
+        !safeFile.read((char*)&ivSize, 2) |
+        !(iv = new uint8_t[ivSize]) |
+        !safeFile.read((char*)iv, ivSize) |
+
         !safeFile.read((char*)&type, 1) |
         !safeFile.read((char*)&passNum, 4)
     ){
@@ -47,12 +56,10 @@ bool SafesModule::readSafeFile(const std::string& filename)
         return false;
     }
 
-    auto decryptedKey = new uint8_t[keySize];
-    AES256CBC aes;
-    cipher->decryptKey(aes, encryptedKey, decryptedKey, keySize);
+    auto decryptedKey = cipher->decryptKey(encryptedKey, keySize);
     delete[] encryptedKey;
 
-    openSafe = new Safe(type, decryptedKey, keySize);
+    openSafe = new Safe(type, decryptedKey, nullptr);
 
     for(int i = 0; i < passNum; i++)
     {
@@ -87,10 +94,16 @@ bool SafesModule::writeSafeFile(const std::string& filename)
 
     uint16_t keySize;
     uint8_t* key;
+    uint16_t ivSize;
+    uint8_t* iv;
     AESType type;
-    openSafe->getKeyInfo(key, keySize, type);
+    openSafe->getKeyInfo(key, keySize, iv, ivSize, type);
     safeFile.write((char*)&keySize, 2);
     safeFile.write((char*)key, keySize);
+
+    safeFile.write((char*)&ivSize, 2);
+    safeFile.write((char*)iv, ivSize);
+
     safeFile.write((char*)&type, 1);
 
     auto passNum = openSafe->size();

@@ -1,10 +1,42 @@
 #include "Safe.hpp"
 
-Safe::Safe(AESType _type, uint8_t* _key, uint16_t _keyLength)
+Safe::Safe(AESType _type, uint8_t* _key, uint8_t* _iv)
 {
     key = std::unique_ptr<uint8_t>(_key);
-    keyLength = _keyLength;
-    changeAES(_type);
+    iv = std::unique_ptr<uint8_t>(_iv);
+    ivLength = type >= AES_128_CBC ? 128/8 : 0;
+    
+    type = _type;
+    AES* ptr = nullptr;
+    switch(type)
+    {
+    case AES_128:
+        ptr = new AES128(0, _key, nullptr, nullptr);
+        keyLength = 128/8;
+        break;
+    case AES_192:
+        ptr = new AES192(0, _key, nullptr, nullptr);
+        keyLength = 192/8;
+        break;
+    case AES_256:
+        ptr = new AES256(0, _key, nullptr, nullptr);
+        keyLength = 256/8;
+        break;
+    case AES_128_CBC:
+        ptr = new AES128CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 128/8;
+        break;
+    case AES_192_CBC:
+        ptr = new AES192CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 192/8;
+        break;
+    case AES_256_CBC:
+        ptr = new AES256CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 256/8;
+        break;
+    }
+
+    cipher.reset(ptr);
 }
 
 Safe::~Safe()
@@ -50,44 +82,17 @@ auto Safe::operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8
     return {names[index], passwords[index], passLengths[index]};
 }
 
-void Safe::getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, AESType& type)
+void Safe::getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, uint8_t*& ivRef, uint16_t& ivSizeRef, AESType& typeRef)
 {
-    if(keyRef) delete[] keyRef;
+    delete[] keyRef;
+    delete[] ivRef;
     keyRef = new uint8_t[keyLength];
+    ivRef = new uint8_t[ivLength];
+    ivSizeRef = ivLength;
     lengthRef = keyLength;
     memcpy(keyRef, key.get(), keyLength);
-}
-
-bool Safe::changeAES(AESType _type)
-{
-    type = _type;
-    AES* ptr = nullptr;
-    switch(type)
-    {
-    case AES_128:
-        ptr = new AES128;
-        break;
-    case AES_192:
-        ptr = new AES192;
-        break;
-    case AES_256:
-        ptr = new AES256;
-        break;
-    case AES_128_CBC:
-        ptr = new AES128CBC;
-        break;
-    case AES_192_CBC:
-        ptr = new AES192CBC;
-        break;
-    case AES_256_CBC:
-        ptr = new AES256CBC;
-        break;
-    default:
-        return false;
-        break;
-    }
-    cipher.reset(ptr);
-    return true;
+    memcpy(ivRef, iv.get(), ivLength);
+    typeRef = type;
 }
 
 uint32_t Safe::size()

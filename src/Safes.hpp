@@ -54,6 +54,8 @@ private:
 *
 *       - size of the encrypted key to the password (uint16_t)
 *       - encrypted key to the passwords
+*       - size of the iv (uint16_t)
+*       - iv
 *
 *       - AES type (byte 0-5)
 *

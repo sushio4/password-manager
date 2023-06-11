@@ -19,11 +19,11 @@ public:
     //as this is the only class containing masterKey
     //it will be (en/de)crypting everything with those
     //using functions from inside the AES object
-    bool decryptKey(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
-    bool encryptKey(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+    uint8_t* decryptKey(const uint8_t* src, uint8_t length);
+    uint8_t* encryptKey(const uint8_t* src, uint8_t length);
 
-    bool decryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
-    bool encryptPassword(AES& aes, const uint8_t* src, uint8_t* dest, uint8_t length);
+    uint8_t* decryptPassword(AES& aes, const uint8_t* src, uint8_t length);
+    uint8_t* encryptPassword(AES& aes, const uint8_t* src, uint8_t length);
 
 private:
     uint8_t* makeKey(std::string password);
