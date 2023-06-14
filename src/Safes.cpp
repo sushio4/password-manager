@@ -79,18 +79,16 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
             return false;
     }
 
-    if(isInThatSafe(name))
-        return (openSafe->change(name, data[0], encryptedPassword, passLength) &&
-                writeSafeFile((std::string&)*openSafe + ".safe"));
-
     for(auto p : passFilePairs)
     {
         if(name == p.first)
         {
             closeSafe();
             readSafeFile(p.second);
+            p.first = data[0];
             return (openSafe->change(name, data[0], encryptedPassword, passLength) &&
-                    writeSafeFile((std::string&)*openSafe + ".safe"));
+                    writeSafeFile((std::string&)*openSafe + ".safe") &&
+                    writeSafeListFile());
         }
     }
 
@@ -108,8 +106,11 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
     if(!encryptedPassword)
         return false;
 
+    passFilePairs.push_back({data[0], safename});
+
     return (openSafe->add(data[0], encryptedPassword, passLength) &&
-            writeSafeFile((std::string&)*openSafe + ".safe"));
+            writeSafeFile((std::string&)*openSafe + ".safe") &&
+            writeSafeListFile());
 }
 
 bool SafesModule::isInThatSafe(const std::string& passwordname)
@@ -152,6 +153,18 @@ bool SafesModule::deleteSafe(const std::string& safename)
     res = deleteSafeHelper(safename);
     if(passFilePairs.size())
         readSafeFile(passFilePairs[0].second);
+
+    //cleanup
+    for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
+    {
+        if(i->second == safename) 
+        {
+            passFilePairs.erase(i);
+            i--;
+        }
+    }
+    writeSafeListFile();
+    
     return res;
 }
 

@@ -27,13 +27,27 @@ int main(int argc, char* argv[])
     }
     else
     {
+        args_t words;
+
         std::cout << "Password manager\n";
         if(manager.firstTimeLog())
         {
             loginFirstTime(manager);
         }
+        else
+        {
+            std::string pwd;
+            while(true){
+                std::cout << "Please enter your password to log in:\n> ";
+                std::cin >> pwd;
+                if(manager.loginLocal(pwd))
+                    break;
+                std::cout << "Wrong password!\n";
+            }
+        }
+
         fflush(stdin);
-        args_t words;
+
         while(true)
         {
             std::cout << "Enter a command:\n";

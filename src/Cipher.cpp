@@ -43,7 +43,8 @@ bool CipherModule::validatePassword(const std::string& password)
     delete aes256;
     aes256 = new AES256(0, masterKey, nullptr, nullptr);
 
-    std::string decrypted = (char*)aes256->decrypt(encrypted, length);
+    auto res = (char*)aes256->decrypt(encrypted, length);
+    std::string decrypted = res ? res : "";
 
     return validated = (decrypted == "magic_value");
 }
