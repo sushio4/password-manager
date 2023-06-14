@@ -197,7 +197,7 @@ uint8_t* AES::encrypt(uint8_t* givenData, long& length)
 
     encDataLength = -1;
     auto res = encrypt();
-    length = encDataLength;
+    length = this->encDataLength;
     return res;
 }
 
@@ -208,7 +208,7 @@ uint8_t* AES::decrypt(uint8_t* givenData, long& length)
 
     decDataLength = -1;
     auto res = decrypt();
-    length = decDataLength;
+    length = this->decDataLength;
     return res;
 }
 
@@ -298,6 +298,8 @@ uint8_t* AES128::encrypt(){
     if(this->encDataLength == -1){
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
+
+    // printf("\n%i\n",this->encDataLength);
 
     encryptedData = new uint8_t[encDataLength];
 
@@ -407,6 +409,9 @@ uint8_t* AES128::decrypt(){
         uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
         this->decDataLength = this->encDataLength - paddingVal;
     }
+
+
+    // printf("\n%i\n",this->decDataLength);
 
     decryptedData = new uint8_t[decDataLength];
 
@@ -578,6 +583,12 @@ uint8_t* AES128CBC::decrypt(){
 
     for(int i = 0 ; i < 16; i++){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
+    }
+
+    // remove padding and slat within a process of copying data from tmpDataArray to decryptedData
+    if(this->decDataLength == -1){
+        uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
+        this->decDataLength = this->encDataLength - paddingVal - 16;
     }
 
     decryptedData = new uint8_t[decDataLength];
@@ -939,6 +950,12 @@ uint8_t* AES192CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
+    // remove salt and padding
+    if(this->decDataLength == -1){
+        uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
+        this->decDataLength = this->encDataLength - paddingVal - 16;
+    }
+
     decryptedData = new uint8_t[decDataLength];
 
     for(int i = 16 ; i < this->decDataLength ; i++){
@@ -1127,6 +1144,12 @@ uint8_t* AES256::decrypt(){
             }
         }
     }
+    
+    // remove and padding
+    if(this->decDataLength == -1){
+        uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
+        this->decDataLength = this->encDataLength - paddingVal;
+    }
 
     decryptedData = new uint8_t[decDataLength];
 
@@ -1299,6 +1322,14 @@ uint8_t* AES256CBC::decrypt(){
     for(int i = 0 ; i < 16; i++){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
+    
+    // remove salt and padding
+    if(this->decDataLength == -1){
+        uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
+        this->decDataLength = this->encDataLength - paddingVal - 16;
+    }
+
+    decryptedData = new uint8_t[decDataLength];
 
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
