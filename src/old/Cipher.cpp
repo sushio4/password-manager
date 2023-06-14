@@ -36,20 +36,3 @@ bool CipherModule::validatePassword(const std::string& password)
 
     return validated = (decrypted == "magic_value");
 }
-
-//added by 272234
-
-uint8_t *CipherModule::decryptPassword(AES &aes, const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
-}
-
-uint8_t *CipherModule::encryptPassword(AES &aes, const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
-}
-
-uint8_t *CipherModule::decryptKey(const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
-}

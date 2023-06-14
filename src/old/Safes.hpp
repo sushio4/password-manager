@@ -31,7 +31,7 @@ public:
     bool synchronize(void);
 
     bool changeSafeName(const std::string& safename, const std::string& newname);
-    bool createSafe(const std::string& safename, AESType type);
+    bool changeSafeAESType(const std::string& safename, int type);
 
     // added to compile CLIMain.cpp
     bool writePassword(const std::string& name, const std::vector<std::string>& data);
@@ -54,8 +54,6 @@ private:
 *
 *   structure:
 *       - magic number 0x65666173 ("safe" in ascii)
-*
-*       - null-terminated name of the safe
 *
 *       - size of the encrypted key to the password (uint16_t)
 *       - encrypted key to the passwords
