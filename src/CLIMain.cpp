@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
         {
             loginFirstTime(manager);
         }
-
+        fflush(stdin);
         args_t words;
         while(true)
         {
@@ -52,6 +52,7 @@ void getInput(args_t& vec)
     size_t count = 0;
 
     auto n = getline(&line, &count, stdin);
+    while(n < 2) n = getline(&line, &count, stdin);
     line[n - 1] = ' ';
     
     auto token = strtok(line, " ");

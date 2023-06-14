@@ -299,7 +299,7 @@ uint8_t* AES128::encrypt(){
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
-    if(!encryptedData) encryptedData = new uint8_t[encDataLength];
+    encryptedData = new uint8_t[encDataLength];
 
     for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -408,6 +408,8 @@ uint8_t* AES128::decrypt(){
         this->decDataLength = this->encDataLength - paddingVal;
     }
 
+    decryptedData = new uint8_t[decDataLength];
+
     for(int i = 0 ; i < this->decDataLength ; i++){
 
         *(decryptedData + i) = *(tmpDataArray + i);
@@ -448,7 +450,7 @@ uint8_t* AES128CBC::encrypt(){
        this->encDataLength = this->decDataLength + 16 + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
-    if(!encryptedData) encryptedData = new uint8_t[encDataLength];
+    encryptedData = new uint8_t[encDataLength];
 
     for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + 16 + i) = *(decryptedData + i);
@@ -578,6 +580,8 @@ uint8_t* AES128CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
+    decryptedData = new uint8_t[decDataLength];
+
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
     }
@@ -668,7 +672,7 @@ uint8_t* AES192::encrypt(){
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
-    if(!encryptedData) encryptedData = new uint8_t[encDataLength];
+    encryptedData = new uint8_t[encDataLength];
 
     for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -765,6 +769,8 @@ uint8_t* AES192::decrypt(){
         this->decDataLength = this->encDataLength - paddingVal;
     }
 
+    decryptedData = new uint8_t[decDataLength];
+
     for(int i = 0 ; i < this->decDataLength ; i++){
 
         *(decryptedData + i) = *(tmpDataArray + i);
@@ -803,7 +809,7 @@ uint8_t* AES192CBC::encrypt(){
        this->encDataLength = this->decDataLength + 16 + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
-    if(!encryptedData) encryptedData = new uint8_t[encDataLength];
+    encryptedData = new uint8_t[encDataLength];
 
     for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + 16 + i) = *(decryptedData + i);
@@ -933,6 +939,8 @@ uint8_t* AES192CBC::decrypt(){
         *(tmpDataArray + i) = *(tmpDataArray + i) ^ *(this->iv + i);
     }
 
+    decryptedData = new uint8_t[decDataLength];
+
     for(int i = 16 ; i < this->decDataLength ; i++){
         *(this->decryptedData + i - 16) = *(tmpDataArray + i);
     }
@@ -1029,7 +1037,7 @@ uint8_t* AES256::encrypt(){
         this->encDataLength = this->decDataLength + ((16 - this->decDataLength % 16) == 0 ? 16 : (16 - this->decDataLength % 16));
     }
 
-    if(!encryptedData) encryptedData = new uint8_t[encDataLength];
+    encryptedData = new uint8_t[encDataLength];
 
     for(int i = 0; i < this->decDataLength ; i++){
         *(encryptedData + i) = *(decryptedData + i);
@@ -1119,6 +1127,8 @@ uint8_t* AES256::decrypt(){
             }
         }
     }
+
+    decryptedData = new uint8_t[decDataLength];
 
     for(int i = 0 ; i < this->decDataLength ; i++){
 

@@ -98,9 +98,9 @@ bool SafesModule::writeSafeFile(const std::string& filename)
     safeFile << (std::string&)(*openSafe);
 
     uint16_t keySize;
-    uint8_t* key;
+    uint8_t* key = nullptr;
     uint16_t ivSize;
-    uint8_t* iv;
+    uint8_t* iv = nullptr;
     AESType type;
 
     openSafe->getKeyInfo(key, keySize, iv, ivSize, type);
