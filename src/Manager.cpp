@@ -48,7 +48,7 @@ bool Manager::existsPassword(const std::string& name)
 
 bool Manager::editPassword(const std::string& name, const std::vector<std::string>& data)
 {
-    return safes->writePassword(name, data);
+    return safes->modifyPassword(name, data);
 }
 
 bool Manager::newPassword(const std::string& safename, const std::vector<std::string>& data)
@@ -91,7 +91,7 @@ bool Manager::changeSafeName(const std::string& safename, const std::string& new
     return safes->changeSafeName(safename, newname);
 }
 
-bool Manager::changeSafeAESType(const std::string& safename, int type)
+bool Manager::createSafe(const std::string& safename, uint8_t type)
 {
-    return safes->changeSafeAESType(safename, type);
+    return safes->createSafe(safename, (AESType)type);
 }

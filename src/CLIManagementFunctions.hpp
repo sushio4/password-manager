@@ -118,22 +118,27 @@ void safeFunction(Manager& mgr, const args_t& vec)
     }
     else if(vec[1] == "change")
     {
-        checkArgNum(4, "Usage: safe change [name|AEStype] <safename>\n");
-        if(vec[2] == "name")
-        {
-            std::cout << "Enter new name:\n";
-            std::string name;
-            std::cin >> name;
-            if(!mgr.changeSafeName(vec[3], name)) 
-                std::cout << "Safe does not exist!\n";
-        }
-        else if (vec[2] == "AEStype")
-        {
-            std::string type;
-            if(!inputAESType(type)) return;
-            if(!mgr.changeSafeAESType(vec[3], std::stoi(type)))
-                std::cout << "Safe does not exist!\n";
-        }
+        checkArgNum(3, "Usage: safe change <safename>\n");
+        
+        std::cout << "Enter new name:\n";
+        std::string name;
+        std::cin >> name;
+        if(!mgr.changeSafeName(vec[3], name)) 
+            std::cout << "Safe does not exist!\n";
+    }
+    else if(vec[1] == "create")
+    {
+        checkArgNum(2, "Usage: safe create");
+
+        std::cout << "Enter a name for that safe:\n";
+        std::string name;
+        std::cin >> name;
+
+        std::string type;
+        if(!inputAESType(type)) return;
+
+        if(!mgr.createSafe(name, std::stoi(type)))
+            std::cout << "Could not create safe!\n";
     }
 }
 

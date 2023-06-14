@@ -47,7 +47,10 @@ protected:
 
 public:
 
-    //virtual uint8_t* generateKey() = 0;
+    //check Safe::Safe(AESType) to see why
+    virtual uint8_t* generateKey() = 0;
+    virtual uint8_t* generateIv() {return nullptr;}
+
     virtual uint8_t* encrypt() = 0;
     virtual uint8_t* encrypt(uint8_t givenKey[16]) = 0;
     virtual uint8_t* decrypt() = 0;

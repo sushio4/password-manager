@@ -30,7 +30,7 @@ public:
     bool newPassword(const std::string& safename, const std::vector<std::string>& data);
 
     bool changeSafeName(const std::string& safename, const std::string& newname);
-    bool changeSafeAESType(const std::string& safename, int type);
+    bool createSafe(const std::string& safename, uint8_t type);
 
     bool loginLocal(const std::string& password);
     bool createRemoteAccount(const std::string& email, const std::string& password);

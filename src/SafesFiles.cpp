@@ -31,6 +31,9 @@ bool SafesModule::readSafeFile(const std::string& filename)
         return false;
     }
 
+    char name[256];
+    safeFile.getline(name, 255, '\0');
+
     uint16_t keySize = 0;
     uint8_t* encryptedKey;
 
@@ -40,15 +43,15 @@ bool SafesModule::readSafeFile(const std::string& filename)
     AESType type;
     uint32_t passNum;
     if(
-        !safeFile.read((char*)&keySize, 2) |
-        !(encryptedKey = new uint8_t[keySize]) | //not necessary but I want to keep read functions in that if
-        !safeFile.read((char*)encryptedKey, keySize) |
+        !safeFile.read((char*)&keySize, 2) ||
+        !(encryptedKey = new uint8_t[keySize]) || //not necessary but I want to keep read functions in that if
+        !safeFile.read((char*)encryptedKey, keySize) ||
 
-        !safeFile.read((char*)&ivSize, 2) |
-        !(iv = new uint8_t[ivSize]) |
-        !safeFile.read((char*)iv, ivSize) |
+        !safeFile.read((char*)&ivSize, 2) ||
+        !(iv = new uint8_t[ivSize]) ||
+        !safeFile.read((char*)iv, ivSize) ||
 
-        !safeFile.read((char*)&type, 1) |
+        !safeFile.read((char*)&type, 1) ||
         !safeFile.read((char*)&passNum, 4)
     ){
         safeFile.close();
@@ -59,7 +62,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
     auto decryptedKey = cipher->decryptKey(encryptedKey, keySize);
     delete[] encryptedKey;
 
-    openSafe = new Safe(type, decryptedKey, nullptr);
+    openSafe = new Safe(name, type, decryptedKey, nullptr);
 
     for(int i = 0; i < passNum; i++)
     {
@@ -68,9 +71,9 @@ bool SafesModule::readSafeFile(const std::string& filename)
         uint8_t passSize;
 
         if(
-            !safeFile.getline(name, 255, '\0')  |
-            !safeFile.read((char*)&passSize, 1) |
-            !(password = new uint8_t[passSize]) | //not necessary but I want to keep read functions in that if
+            !safeFile.getline(name, 255, '\0')  ||
+            !safeFile.read((char*)&passSize, 1) ||
+            !(password = new uint8_t[passSize]) || //not necessary but I want to keep read functions in that if
             !safeFile.read((char*)password, passSize)
         ){
             safeFile.close();
@@ -91,6 +94,7 @@ bool SafesModule::writeSafeFile(const std::string& filename)
 
     //magic number
     safeFile.write("safe", 4);
+    safeFile << (std::string&)(*openSafe);
 
     uint16_t keySize;
     uint8_t* key;

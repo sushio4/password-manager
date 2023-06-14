@@ -76,7 +76,8 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
     }
 
     if(isInThatSafe(name))
-        return openSafe->change(name, data[0], encryptedPassword, passLength);
+        return (openSafe->change(name, data[0], encryptedPassword, passLength) &&
+                writeSafeFile((std::string&)*openSafe + ".safe"));
 
     for(auto p : passFilePairs)
     {
@@ -84,7 +85,8 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
         {
             closeSafe();
             readSafeFile(p.second);
-            return openSafe->change(name, data[0], encryptedPassword, passLength);
+            return (openSafe->change(name, data[0], encryptedPassword, passLength) &&
+                    writeSafeFile((std::string&)*openSafe + ".safe"));
         }
     }
 
@@ -103,7 +105,8 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
     if(!encryptedPassword)
         return false;
 
-    return openSafe->add(data[0], encryptedPassword, passLength);
+    return (openSafe->add(data[0], encryptedPassword, passLength) &&
+            writeSafeFile((std::string&)*openSafe + ".safe"));
 }
 
 bool SafesModule::isInThatSafe(const std::string& passwordname)
@@ -121,4 +124,13 @@ bool SafesModule::changeSafeName(const std::string& safename, const std::string&
 
     (std::string&)(*openSafe) = newname;
     return true;
+}
+
+bool SafesModule::createSafe(const std::string& safename, AESType type)
+{
+    writeSafeFile((std::string&)*openSafe + ".safe");
+    delete openSafe;
+
+    openSafe = new Safe(safename, type);
+    writeSafeFile(safename + ".safe");
 }

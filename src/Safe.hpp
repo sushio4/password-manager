@@ -31,7 +31,8 @@ private:
     uint16_t keyLength;
     uint16_t ivLength;
 public:
-    Safe(AESType _type, uint8_t* _key, uint8_t* _iv);
+    Safe(const std::string& _name, AESType _type, uint8_t* _key, uint8_t* _iv);
+    Safe(const std::string& _name, AESType _type);
     ~Safe();
 
     bool add(const std::string& name, uint8_t* password, uint8_t passwordLength);
