@@ -124,7 +124,6 @@ bool SafesModule::changeSafeName(const std::string& safename, const std::string&
 }
 
 // added to compile CLImain.cpp
-// added by 272234
 
 bool SafesModule::writePassword(const std::string& name, const std::vector<std::string>& data){
     return true;

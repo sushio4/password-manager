@@ -179,8 +179,3 @@ bool SafesModule::writeSafeListFile()
 
     return true;
 }
-
-// added by 272234
-bool SafesModule::changeSafeAESType(const std::string &safename, int type) {
-    return true;
-}
