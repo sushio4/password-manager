@@ -8,8 +8,11 @@ SafesModule::SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<C
     cipher = cipherRef;
     readSafeListFile();
     //to avoid nullptr dereferencing
-    readSafeFile(passFilePairs[0].second);
+    if(passFilePairs.size() != 0)
+        readSafeFile(passFilePairs[0].second);
 }
+
+bool SafesModule::isSafeOpen() const {return !!openSafe;}
 
 //will it work? who knows...
 std::string SafesModule::getPassword(const std::string& name)

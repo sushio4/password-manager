@@ -25,6 +25,8 @@ public:
     std::string readPassword(const std::string& passwordName);
     std::string generatePassword(const std::vector<std::string>& args);
     
+    bool areAnySafes() const;
+    
     bool existsPassword(const std::string& name);
     bool editPassword(const std::string& passwordName, const std::vector<std::string>& data);
     bool newPassword(const std::string& safename, const std::vector<std::string>& data);

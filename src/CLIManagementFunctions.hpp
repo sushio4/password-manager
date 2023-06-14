@@ -40,6 +40,12 @@ void safeFunction(Manager& mgr, const args_t& vec)
         return;
     }
 
+    if(!mgr.areAnySafes() && vec[1] != "list" && vec[1] != "create")
+    {
+        std::cout << "You have no safes!\nEnter \"safe create\" to make one!\n";
+        return;
+    }
+
     if(vec[1] == "list")
     {
         args_t list;

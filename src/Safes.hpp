@@ -35,6 +35,7 @@ public:
 
     // added to compile CLIMain.cpp
     bool writePassword(const std::string& name, const std::vector<std::string>& data);
+    bool isSafeOpen() const;
 
 private:
     bool isInThatSafe(const std::string& passwordname);

@@ -95,3 +95,8 @@ bool Manager::createSafe(const std::string& safename, uint8_t type)
 {
     return safes->createSafe(safename, (AESType)type);
 }
+
+bool Manager::areAnySafes() const 
+{
+    return safes->isSafeOpen();
+}
