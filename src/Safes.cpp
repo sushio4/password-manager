@@ -1,7 +1,6 @@
 #include "Safes.hpp"
 #include <stdint.h>
 #include <algorithm>
-
 SafesModule::SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef)
 {
     sync = syncRef;
@@ -74,9 +73,19 @@ void SafesModule::getSafePasswordList(std::vector<std::string>& list)
         list.push_back(p.first + " : " + p.second);
 }
 
-bool SafesModule::modifyPassword(const std::string& name, const std::vector<std::string>& data)
+bool SafesModule::modifyPassword(const std::string& name, std::vector<std::string> data)
 {
-    long passLength = data[1].size();
+    if(data[0] == "") data[0] = name;
+    else if(data[1] == "") data[1] = getPassword(name);
+
+    std::string safename;
+    for(auto p : passFilePairs)
+        if(p.first == name) {safename = p.second; break;}
+
+    return (deletePassword(name) &&
+            addPassword(safename, data));
+
+    /*long passLength = data[1].size();
     uint8_t* encryptedPassword = nullptr;
     if(passLength)
     {
@@ -98,7 +107,7 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
         }
     }
 
-    return false;
+    return false;*/
 }
 
 bool SafesModule::addPassword(const std::string& safename, const std::vector<std::string>& data)
@@ -151,24 +160,11 @@ bool SafesModule::deleteSafe(const std::string& safename)
     if(safename == (std::string&)(*openSafe))
     {
         closeSafe();
-        res = deleteSafeHelper(safename);
-        if(passFilePairs.size())
-            readSafeFile(passFilePairs[0].second);
-        return res;
     }
     res = deleteSafeHelper(safename);
     if(passFilePairs.size())
         readSafeFile(passFilePairs[0].second);
 
-    //cleanup
-    for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
-    {
-        if(i->second == safename) 
-        {
-            passFilePairs.erase(i);
-            i--;
-        }
-    }
     writeSafeListFile();
     
     return res;
@@ -180,7 +176,6 @@ bool SafesModule::deleteSafeHelper(const std::string& safename)
     for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
     {
         if((*i).second == safename) passFilePairs.erase(i);
-        i--;
     }
     return true;
 }
@@ -206,6 +201,7 @@ bool SafesModule::deletePassword(const std::string& passwordName)
         if((*i).first == passwordName)
         {
             passFilePairs.erase(i);
+            
             break;
         }
     return openSafe->remove(passwordName) && writeSafeFile((std::string&)(*openSafe) + ".safe");

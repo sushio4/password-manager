@@ -54,7 +54,8 @@ void safeFunction(Manager& mgr, const args_t& vec)
                     " - edit [name|password] <passwordname>\n"
                     " - add <safename> <passwordname>\n"
                     " - change <safename>\n"
-                    " - create\n";
+                    " - create\n"
+                    " - delete [safe|pass] <name>\n";
         return;
     }
 
@@ -119,7 +120,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
             return;
         }
 
-        args_t data(3);
+        args_t data(2);
 
         if(vec[2] == "name")
         {
@@ -172,6 +173,26 @@ void safeFunction(Manager& mgr, const args_t& vec)
 
         if(!mgr.createSafe(name, type))
             std::cout << "Could not create safe!\n";
+    }
+    else if(vec[1] == "delete")
+    {
+        checkArgNum(4, "Usafe: safe delete [safe|pass] <name>");
+
+        bool res;
+        if(vec[2] == "safe")
+            res = mgr.deleteSafe(vec[3]);
+        else if(vec[2] == "pass")
+            res = mgr.deletePassword(vec[3]);
+        else
+        {
+            std::cout << "Wrong option!\n";
+            return;
+        }
+
+        if(res)
+            std::cout << "Deleted successfully.\n";
+        else
+            std::cout << "Wrong name!\n";
     }
 }
 

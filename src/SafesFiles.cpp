@@ -19,20 +19,20 @@ bool SafesModule::readSafeFile(const std::string& filename)
 {
     if(openSafe) closeSafe();
 
-    std::ifstream safeFile(filename, std::ios::in | std::ios::binary);
+    std::ifstream safeFile(filename);
     if(!safeFile.is_open()) return false;
 
     //magic number check
     uint32_t magicNumber = 0;
-    safeFile.read((char*)&magicNumber, 4);
+    safeFile >> magicNumber;
     if(magicNumber != 0x65666173)
     {
         safeFile.close();
         return false;
     }
 
-    char name[256];
-    safeFile.getline(name, 255, '\0');
+    std::string name;
+    safeFile >> name;
 
     long keySize = 0;
     uint8_t* encryptedKey;
@@ -40,47 +40,40 @@ bool SafesModule::readSafeFile(const std::string& filename)
     uint16_t ivSize = 0;
     uint8_t* iv;
 
-    uint8_t typei;
+    uint32_t typei;
     uint32_t passNum;
-    if(
-        !safeFile.read((char*)&keySize, sizeof(long)) ||
-        !(encryptedKey = new uint8_t[keySize]) || //not necessary but I want to keep read functions in that if
-        !safeFile.read((char*)encryptedKey, keySize) ||
 
-        !safeFile.read((char*)&ivSize, 2) ||
-        !(iv = new uint8_t[ivSize]) ||
-        !(safeFile.read((char*)iv, ivSize) || ivSize != 0) ||
+    safeFile >> keySize;
+    encryptedKey = new uint8_t[keySize];
+    for(int i = 0; i < keySize; i++)
+        safeFile >> encryptedKey[i];
 
-        !safeFile.read((char*)&typei, 1) ||
-        !safeFile.read((char*)&passNum, 4)
-    ){
-        safeFile.close();
-        if(encryptedKey) delete[] encryptedKey;
-        return false;
-    }
+    safeFile >> ivSize;
+    iv = new uint8_t[ivSize];
+    for(int i = 0; i < ivSize; i++)
+        safeFile >> iv[i];
+
+    safeFile >> typei;
+    safeFile >> passNum;
 
     auto decryptedKey = cipher->decryptKey(encryptedKey, keySize);
     delete[] encryptedKey;
 
-    openSafe = new Safe(name, (AESType)typei, decryptedKey, nullptr);
+    if(!ivSize) iv = nullptr;
+    openSafe = new Safe(name, (AESType)typei, decryptedKey, iv);
 
     for(int i = 0; i < passNum; i++)
     {
-        char name[256];
+        std::string name;
         uint8_t *password;
-        uint8_t passSize;
+        uint32_t passSize;
 
-        if(
-            !safeFile.getline(name, 255, '\0')  ||
-            !safeFile.read((char*)&passSize, 1) ||
-            !(password = new uint8_t[passSize]) || //not necessary but I want to keep read functions in that if
-            !safeFile.read((char*)password, passSize)
-        ){
-            safeFile.close();
-            delete openSafe;
-            //delete[] password;
-            return false;
-        }
+    
+        safeFile >> name;
+        safeFile >> passSize;
+        password = new uint8_t[passSize];
+        for(int i = 0; i < passSize; i++)
+            safeFile >> password[i];
 
         openSafe->add(name, password, passSize);
     }
@@ -91,12 +84,12 @@ bool SafesModule::readSafeFile(const std::string& filename)
 bool SafesModule::writeSafeFile(const std::string& filename)
 {
     if(!openSafe) return true;
-    std::ofstream safeFile(filename, std::ios::out | std::ios::trunc | std::ios::binary);
+    std::ofstream safeFile(filename, std::ios::out | std::ios::trunc);
 
     //magic number
-    safeFile.write("safe", 4);
+    safeFile << 0x65666173 << '\n';
     auto name = (std::string&)(*openSafe);
-    safeFile.write(name.c_str(), name.size()+1);
+    safeFile << name << '\n';
 
     long keySize;
     uint16_t keySize16;
@@ -107,25 +100,33 @@ bool SafesModule::writeSafeFile(const std::string& filename)
 
     openSafe->getKeyInfo(key, keySize16, iv, ivSize, type);
     keySize = keySize16;
+    auto encryptedKey = cipher->encryptKey(key, keySize);
 
-    safeFile.write((char*)&keySize, sizeof(long));
-    safeFile.write((char*)key, keySize);
+    safeFile << keySize << '\n';
 
-    safeFile.write((char*)&ivSize, 2);
-    safeFile.write((char*)iv, ivSize);
+    for(int i = 0; i < keySize; i++)
+        safeFile << encryptedKey[i] << '\n';
 
-    safeFile.write((char*)&type, 1);
+    safeFile << ivSize << '\n';
+    
+    for(int i = 0; i < ivSize; i++)
+        safeFile << iv[i] << '\n';
+
+    safeFile << (int)type << '\n';
 
     auto passNum = openSafe->size();
-    safeFile.write((char*)&passNum, 4);
+    safeFile << passNum << '\n';
 
     for(int i = 0; i < passNum; i++)
     {
         auto element = (*openSafe)[i];
         auto name = std::get<0>(element);
-        safeFile.write(name.c_str(), name.size()+1);
-        safeFile.write((char*)&std::get<2>(element), 1);
-        safeFile.write((char*)std::get<1>(element), std::get<2>(element));
+        auto ptr  = std::get<1>(element);
+        auto size = std::get<2>(element);
+        safeFile << name << '\n';
+        safeFile << (int)size << '\n';
+        for(int i = 0; i < size; i++)
+            safeFile << ptr[i] << '\n';
     }
     safeFile.close();
     return true;

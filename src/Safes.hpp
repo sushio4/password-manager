@@ -28,7 +28,7 @@ public:
     void getPasswordList(std::vector<std::string>& list);   
     void getSafeList(std::vector<std::string>& list);   
     void getSafePasswordList(std::vector<std::string>& list);    
-    bool modifyPassword (const std::string& name, const std::vector<std::string>& data);
+    bool modifyPassword (const std::string& name, std::vector<std::string> data);
     bool addPassword(const std::string& safename, const std::vector<std::string>& data);
     bool synchronize(void);
     bool deletePassword(const std::string& passwordName);
