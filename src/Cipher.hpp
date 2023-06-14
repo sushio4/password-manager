@@ -9,6 +9,7 @@ class CipherModule
 private:
     uint8_t* masterKey = nullptr;
     bool validated = false;
+    AES* aes256 = nullptr;
 
 public:
     //it'll generate masterKey  from password
@@ -19,11 +20,11 @@ public:
     //as this is the only class containing masterKey
     //it will be (en/de)crypting everything with those
     //using functions from inside the AES object
-    uint8_t* decryptKey(const uint8_t* src, uint8_t length);
-    uint8_t* encryptKey(const uint8_t* src, uint8_t length);
+    uint8_t* decryptKey(uint8_t* src, long& length);
+    uint8_t* encryptKey(uint8_t* src, long& length);
 
-    uint8_t* decryptPassword(AES& aes, const uint8_t* src, uint8_t length);
-    uint8_t* encryptPassword(AES& aes, const uint8_t* src, uint8_t length);
+    uint8_t* decryptPassword(AES& aes, uint8_t* src, long& length);
+    uint8_t* encryptPassword(AES& aes, uint8_t* src, long& length);
 
 private:
     uint8_t* makeKey(std::string password);

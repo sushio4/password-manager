@@ -13,6 +13,14 @@
         return;\
     }
 
+void loginFirstTime(Manager& mgr)
+{
+    std::cout << "Hello, new user!\nEnter a password you'll use to log in to this program:\n";
+    std::string password;
+    std::cin >> password;
+    mgr.loginLocal(password);
+}
+
 void quitFunction(Manager& mgr, const args_t& vec)
 {
     std::exit(0);

@@ -36,6 +36,7 @@ public:
     bool deleteSafe(const std::string& safename);
 
     bool isSafeOpen() const;
+    bool deleteSafeHelper(const std::string& safename);
 
 private:
     bool isInThatSafe(const std::string& passwordname);
@@ -46,8 +47,6 @@ private:
     bool writeSafeFile(const std::string& filename);
     bool removeSafeFile(const std::string& filename);
     void closeSafe(void);
-
-    bool deleteSafeHelper(const std::string& safename);
 };
 
 /*

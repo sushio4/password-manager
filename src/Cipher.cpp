@@ -21,35 +21,49 @@ bool CipherModule::validatePassword(const std::string& password)
     {
         //first time login
         std::ofstream valFile("val.bin");
-        AES256 aes(11, masterKey, nullptr, (uint8_t*)"magic_value");
-        auto encrypted = aes.encrypt();
-        valFile << (char*)encrypted;
+        aes256 = new AES256(0, masterKey, nullptr, nullptr);
+        long length = 11;
+        char* val = "magic_value";
+        auto encrypted = aes256->encrypt((uint8_t*)val, length);
+
+        valFile.write((char*)&length, sizeof(long));
+        valFile.write((char*)encrypted, length);
         valFile.close();
         return validated = true;
     }
     
-    std::string encrypted;
-    valFile >> encrypted;
+    long length;
+    valFile.read((char*)length, sizeof(long));
 
-    AES256 aes(11, masterKey, (uint8_t*)encrypted.c_str(), nullptr);
-    std::string decrypted = (char*)aes.decrypt();
+    auto encrypted = new uint8_t[length];
+    valFile.read((char*)encrypted, length);
+
+    delete aes256;
+    aes256 = new AES256(0, masterKey, nullptr, nullptr);
+
+    std::string decrypted = (char*)aes256->decrypt(encrypted, length);
 
     return validated = (decrypted == "magic_value");
 }
 
 //added by 272234
 
-uint8_t *CipherModule::decryptPassword(AES &aes, const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
+uint8_t *CipherModule::decryptPassword(AES &aes, uint8_t *src, long& length) 
+{
+    return aes.decrypt(src, length);
 }
 
-uint8_t *CipherModule::encryptPassword(AES &aes, const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
+uint8_t *CipherModule::encryptPassword(AES &aes, uint8_t *src, long& length) 
+{
+    return aes.encrypt(src, length);
 }
 
-uint8_t *CipherModule::decryptKey(const uint8_t *src, uint8_t length) {
-    uint8_t * tabl = new uint8_t [3];
-    return tabl;
+uint8_t *CipherModule::decryptKey(uint8_t *src, long& length) 
+{
+    return aes256->decrypt(src, length);
+}
+
+uint8_t* CipherModule::encryptKey(uint8_t* src, long& length)
+{
+    return aes256->encrypt(src, length);
 }

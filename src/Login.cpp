@@ -1,28 +1,39 @@
 #include "Login.hpp"
 
+#include <fstream>
+
 LoginModule::LoginModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef)
 {
     sync = syncRef;
     cipher = cipherRef;
 }
 
-//added by 272234
 bool LoginModule::login(const std::string &password) {
-    return true;
+    if(cipher->validatePassword(password))
+    {
+        this->password = password;
+        return true;
+    }
+    return false;
 }
 
 bool LoginModule::loginRemote(const std::string& email, const std::string& password){
-    return true;
+    return false;
 }
 
 bool LoginModule::changePassword(const std::string& oldPassword, const std::string& newPassword){
-    return true;
+    return false;
 }
 
 bool LoginModule::changeEmail(const std::string& password, const std::string& email){
-    return true;
+    return false;
 }
 
 bool LoginModule::synchronize(void){
-    return true;
+    return false;
+}
+
+bool LoginModule::firstTime()
+{
+    return (!std::ifstream("val.bin"));
 }

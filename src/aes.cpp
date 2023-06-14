@@ -190,26 +190,26 @@ void AES::addPadding(){
     }
 }
 
-uint8_t* AES::encrypt(uint8_t* givenData, long length)
+uint8_t* AES::encrypt(uint8_t* givenData, long& length)
 {
-    delete[] decryptedData;
-    delete[] encryptedData;
     decryptedData = givenData;
     decDataLength = length;
 
     encDataLength = -1;
-    return encrypt();
+    auto res = encrypt();
+    length = encDataLength;
+    return res;
 }
 
-uint8_t* AES::decrypt(uint8_t* givenData, long length)
+uint8_t* AES::decrypt(uint8_t* givenData, long& length)
 {
-    delete[] encryptedData;
-    delete[] decryptedData;
     encryptedData = givenData;
     encDataLength = length;
 
     decDataLength = -1;
-    return decrypt();
+    auto res = decrypt();
+    length = decryptedDataLength;
+    return res;
 }
 
 // AES128 CLASS SECTION

@@ -14,10 +14,12 @@ private:
     std::unique_ptr<GeneratorModule> generator;
     std::shared_ptr<SafesModule> safes;
 
-    bool logged;
+    bool logged = false;
 
 public:
     Manager(void);
+
+    bool firstTimeLog() const;
 
     void getPasswordList(std::vector<std::string>& list) const;
     void getSafeList(std::vector<std::string>& list) const;

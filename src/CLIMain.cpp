@@ -27,12 +27,16 @@ int main(int argc, char* argv[])
     }
     else
     {
-        //do stuff from stdin
-        std::cout << "\nPassword manager\nEnter a command:\n";
+        std::cout << "Password manager\n";
+        if(manager.firstTimeLog())
+        {
+            loginFirstTime(manager);
+        }
 
         args_t words;
         while(true)
         {
+            std::cout << "Enter a command:\n";
             words.clear();
             getInput(words);        
             parseInput(manager, words);

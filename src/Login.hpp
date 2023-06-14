@@ -23,4 +23,5 @@ public:
     bool changePassword(const std::string& oldPassword, const std::string& newPassword);
     bool changeEmail(const std::string& password, const std::string& email);
     bool synchronize(void);
+    bool firstTime();
 };

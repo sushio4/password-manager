@@ -12,6 +12,11 @@ Manager::Manager(void)
     logged = false;
 }
 
+bool Manager::firstTimeLog() const
+{
+    return login->firstTime();
+}
+
 void Manager::getPasswordList(std::vector<std::string>& list) const
 {
     safes->getPasswordList(list);
@@ -99,4 +104,14 @@ bool Manager::createSafe(const std::string& safename, uint8_t type)
 bool Manager::areAnySafes() const 
 {
     return safes->isSafeOpen();
+}
+
+bool Manager::deletePassword(const std::string& passwordName)
+{
+    return safes->deletePassword(passwordName);
+}
+
+bool Manager::deleteSafe(const std::string& safename)
+{
+    return safes->deleteSafe(safename);
 }
