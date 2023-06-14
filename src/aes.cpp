@@ -273,7 +273,7 @@ void AES128::expandKey(){
 
 // well actually maybe that generate key only in AES?
 uint8_t* AES128::generateKey(){
-   uint8_t key[KEYLENGTH];
+   auto key = new uint8_t[KEYLENGTH];
    srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        *(key + i) = rand() % 256;
@@ -641,7 +641,7 @@ AES192::AES192(long dataLength, uint8_t* key = nullptr, uint8_t* encryptedData =
 }
 
 uint8_t* AES192::generateKey(){
-   uint8_t key[KEYLENGTH];
+   auto key = new uint8_t[KEYLENGTH];
    srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        // key.push_back(std::byte(rand() % 256));
@@ -998,7 +998,7 @@ void AES256::expandKey(){
 
 // for later thoughts
 uint8_t* AES256::generateKey(){
-   uint8_t key[KEYLENGTH];
+   auto key = new uint8_t[KEYLENGTH];
    srand(time(0));
    for (int i = 0; i < KEYLENGTH; i++) {
        *(key + i) = rand() % 256;

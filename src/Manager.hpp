@@ -30,9 +30,11 @@ public:
     bool existsPassword(const std::string& name);
     bool editPassword(const std::string& passwordName, const std::vector<std::string>& data);
     bool newPassword(const std::string& safename, const std::vector<std::string>& data);
+    bool deletePassword(const std::string& passwordName);
 
     bool changeSafeName(const std::string& safename, const std::string& newname);
     bool createSafe(const std::string& safename, uint8_t type);
+    bool deleteSafe(const std::string& safename);
 
     bool loginLocal(const std::string& password);
     bool createRemoteAccount(const std::string& email, const std::string& password);

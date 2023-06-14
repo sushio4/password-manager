@@ -44,7 +44,7 @@ bool inputPassword(std::string& password, Manager& mgr)
     return true;
 }
 
-bool inputAESType(std::string& type)
+bool inputAESType(uint8_t& type)
 {
     std::cout << "Enter a number:\n"
         "0 - 128 bit\n"
@@ -60,6 +60,6 @@ bool inputAESType(std::string& type)
         std::cout << "Invalid option!\n";
         return false;
     }
-    type = std::to_string(itype);
+    type = itype;
     return true;
 }

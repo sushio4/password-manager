@@ -131,9 +131,20 @@ bool SafesModule::changeSafeName(const std::string& safename, const std::string&
 
 bool SafesModule::createSafe(const std::string& safename, AESType type)
 {
-    if(!writeSafeFile((std::string&)*openSafe + ".safe")) return false;
+    if(openSafe && !writeSafeFile((std::string&)(*openSafe) + ".safe")) return false;
     delete openSafe;
 
     openSafe = new Safe(safename, type);
     return writeSafeFile(safename + ".safe");
+}
+
+bool SafesModule::deleteSafe(const std::string& safename)
+{
+    //I'll finish later
+    return false;
+}
+
+bool SafesModule::deletePassword(const std::string& passwordName)
+{
+    return false;
 }

@@ -25,15 +25,18 @@ int main(int argc, char* argv[])
     {
         //do stuff from args
     }
-    else while(true)
+    else
     {
         //do stuff from stdin
         std::cout << "\nPassword manager\nEnter a command:\n";
 
         args_t words;
-        getInput(words);        
-
-        parseInput(manager, words);
+        while(true)
+        {
+            words.clear();
+            getInput(words);        
+            parseInput(manager, words);
+        }
     }
 
     return 0;
@@ -44,26 +47,27 @@ void getInput(args_t& vec)
     char* line = nullptr;
     size_t count = 0;
 
-    getline(&line, &count, stdin);
+    auto n = getline(&line, &count, stdin);
+    line[n - 1] = ' ';
     
     auto token = strtok(line, " ");
-    while(token)
+    while(token != nullptr)
     {
-        vec.push_back(token);
-        free(token);
+        vec.push_back(std::string(token));
         token = strtok(NULL, " ");
     }
 }
 
 void parseInput(Manager& mgr, const args_t& vec)
 {
-    typedef void (*func_ptr)(Manager& mgr, const std::vector<std::string>& vec);
+    typedef void (*func_ptr)(Manager& mgr, const args_t& vec);
     //hashmap for efficiency
     const std::unordered_map<std::string, func_ptr> map = {
         {"help", helpFunction},
         {"login", loginFunction},
         {"safe", safeFunction},
-        {"sync", synchronizeFunction}
+        {"sync", synchronizeFunction},
+        {"quit", quitFunction}
     };
 
     try{

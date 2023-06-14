@@ -42,8 +42,8 @@ Safe::Safe(const std::string& _name, AESType _type, uint8_t* _key, uint8_t* _iv)
 
 Safe::Safe(const std::string& _name, AESType _type) : Safe(_name, _type, nullptr, nullptr)
 {
-    cipher.get()->generateKey();
-    cipher.get()->generateIv();
+    key.reset(cipher.get()->generateKey());
+    iv.reset(cipher.get()->generateIv());
 }
 
 Safe::~Safe()
@@ -91,8 +91,8 @@ auto Safe::operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8
 
 void Safe::getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, uint8_t*& ivRef, uint16_t& ivSizeRef, AESType& typeRef)
 {
-    delete[] keyRef;
-    delete[] ivRef;
+    if(keyRef) delete[] keyRef;
+    if(ivRef) delete[] ivRef;
     keyRef = new uint8_t[keyLength];
     ivRef = new uint8_t[ivLength];
     ivSizeRef = ivLength;

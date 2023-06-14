@@ -90,6 +90,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
 
 bool SafesModule::writeSafeFile(const std::string& filename)
 {
+    if(!openSafe) return true;
     std::ofstream safeFile(filename, std::ios::out | std::ios::trunc | std::ios::binary);
 
     //magic number
@@ -101,7 +102,9 @@ bool SafesModule::writeSafeFile(const std::string& filename)
     uint16_t ivSize;
     uint8_t* iv;
     AESType type;
+
     openSafe->getKeyInfo(key, keySize, iv, ivSize, type);
+
     safeFile.write((char*)&keySize, 2);
     safeFile.write((char*)key, keySize);
 

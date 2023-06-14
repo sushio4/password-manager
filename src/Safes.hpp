@@ -29,12 +29,12 @@ public:
     bool modifyPassword (const std::string& name, const std::vector<std::string>& data);
     bool addPassword(const std::string& safename, const std::vector<std::string>& data);
     bool synchronize(void);
+    bool deletePassword(const std::string& passwordName);
 
     bool changeSafeName(const std::string& safename, const std::string& newname);
     bool createSafe(const std::string& safename, AESType type);
+    bool deleteSafe(const std::string& safename);
 
-    // added to compile CLIMain.cpp
-    bool writePassword(const std::string& name, const std::vector<std::string>& data);
     bool isSafeOpen() const;
 
 private:

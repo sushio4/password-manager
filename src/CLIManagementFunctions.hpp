@@ -13,6 +13,10 @@
         return;\
     }
 
+void quitFunction(Manager& mgr, const args_t& vec)
+{
+    std::exit(0);
+}
 
 void helpFunction(Manager& mgr, const args_t& vec)
 {
@@ -36,11 +40,17 @@ void safeFunction(Manager& mgr, const args_t& vec)
 {
     if(vec.size() < 2)
     {
-        std::cout << "Usage: safe <command>\n";
+        std::cout << "Usage: safe <command>\nAvailable commands:\n"
+                    " - list [safes|passwords](optional)\n"
+                    " - get <passwordname>\n"
+                    " - edit [name|password] <passwordname>\n"
+                    " - add <safename> <passwordname>\n"
+                    " - change <safename>\n"
+                    " - create\n";
         return;
     }
 
-    if(!mgr.areAnySafes() && vec[1] != "list" && vec[1] != "create")
+    if(!mgr.areAnySafes() && (vec[1] != "list") && (vec[1] != "create"))
     {
         std::cout << "You have no safes!\nEnter \"safe create\" to make one!\n";
         return;
@@ -61,6 +71,11 @@ void safeFunction(Manager& mgr, const args_t& vec)
         }
         else if(vec[2] == "passwords")
         {
+            if(!mgr.areAnySafes())
+            {
+                std::cout << "You have no safes!\nEnter \"safe create\" to make one!\n";
+                return;
+            }
             std::cout << "Passwords in a current safe:\n";
             mgr.getPasswordList(list);
         }
@@ -69,16 +84,20 @@ void safeFunction(Manager& mgr, const args_t& vec)
             std::cout << "Usage: safe list [safes|passwords](optional)\n";
             return;
         }
-        for(auto e : list)
-            std::cout << e << "\n";
+
+        if(list.size())
+            for(auto e : list)
+                std::cout << e << "\n";
+        else 
+            std::cout << "No elements!\n";
     }
     else if(vec[1] == "get")
     {
-        checkArgNum(3, "Usage: safe get <safename>\n");
+        checkArgNum(3, "Usage: safe get <passwordname>\n");
 
         auto res = mgr.readPassword(vec[2]);
         if(res == "")
-            std::cout << "Safe named " << vec[2] << " does not exist.\n";
+            std::cout << "Password named " << vec[2] << " does not exist.\n";
         else
             std::cout << res << std::endl;
     }
@@ -140,10 +159,10 @@ void safeFunction(Manager& mgr, const args_t& vec)
         std::string name;
         std::cin >> name;
 
-        std::string type;
+        uint8_t type;
         if(!inputAESType(type)) return;
 
-        if(!mgr.createSafe(name, std::stoi(type)))
+        if(!mgr.createSafe(name, type))
             std::cout << "Could not create safe!\n";
     }
 }
