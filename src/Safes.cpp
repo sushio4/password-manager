@@ -104,7 +104,6 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
 
     uint8_t passLength = data[1].size();
     auto encryptedPassword = cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), passLength);
-
     if(!encryptedPassword)
         return false;
 
@@ -140,11 +139,54 @@ bool SafesModule::createSafe(const std::string& safename, AESType type)
 
 bool SafesModule::deleteSafe(const std::string& safename)
 {
-    //I'll finish later
-    return false;
+    bool res;
+    if(safename == (std::string&)(*openSafe))
+    {
+        closeSafe();
+        res = deleteSafeHelper(safename);
+        if(passFilePairs.size())
+            readSafeFile(passFilePairs[0].second);
+        return res;
+    }
+    res = deleteSafeHelper(safename);
+    if(passFilePairs.size())
+        readSafeFile(passFilePairs[0].second);
+    return res;
+}
+
+bool SafesModule::deleteSafeHelper(const std::string& safename)
+{
+    if(!removeSafeFile(safename + ".safe")) return false;
+    for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
+    {
+        if((*i).second == safename) passFilePairs.erase(i);
+        i--;
+    }
+    return true;
 }
 
 bool SafesModule::deletePassword(const std::string& passwordName)
 {
-    return false;
+    if(!isInThatSafe(passwordName))
+    {
+        for(auto p : passFilePairs)
+        {
+            if(p.first == passwordName)
+            {
+                closeSafe();
+                if(!readSafeFile(p.second + ".safe")) return false;
+                goto found;
+            }
+            //not found
+            return false;
+        }
+    }
+    found:
+    for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
+        if((*i).first == passwordName)
+        {
+            passFilePairs.erase(i);
+            break;
+        }
+    return openSafe->remove(passwordName) && writeSafeFile((std::string&)(*openSafe) + ".safe");
 }

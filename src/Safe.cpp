@@ -77,6 +77,21 @@ bool Safe::change(const std::string& name, std::string newName, uint8_t* passwor
     return false;
 }
 
+bool Safe::remove(const std::string& name)
+{
+    for(auto i = 0; i < names.size(); i++)
+    {
+        if(names[i] == name)
+        {
+            names.erase(names.begin() + i);
+            passwords.erase(passwords.begin() + i);
+            passLengths.erase(passLengths.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
 auto Safe::operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>
 {
     for(int i = 0; i < names.size(); i++)

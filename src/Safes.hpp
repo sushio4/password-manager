@@ -46,6 +46,8 @@ private:
     bool writeSafeFile(const std::string& filename);
     bool removeSafeFile(const std::string& filename);
     void closeSafe(void);
+
+    bool deleteSafeHelper(const std::string& safename);
 };
 
 /*
