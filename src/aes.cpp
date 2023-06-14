@@ -593,8 +593,12 @@ uint8_t* AES128CBC::decrypt(){
 
     decryptedData = new uint8_t[decDataLength];
 
-    for(int i = 16 ; i < this->decDataLength ; i++){
-        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // for(int i = 16 ; i < this->decDataLength ; i++){
+    //     *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // }
+
+    for(int i = 0 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i) = *(tmpDataArray + i + 16);
     }
 
     delete [] tmpDataArray;
@@ -780,6 +784,8 @@ uint8_t* AES192::decrypt(){
         this->decDataLength = this->encDataLength - paddingVal;
     }
 
+    
+
     decryptedData = new uint8_t[decDataLength];
 
     for(int i = 0 ; i < this->decDataLength ; i++){
@@ -955,11 +961,15 @@ uint8_t* AES192CBC::decrypt(){
         uint8_t paddingVal = *(tmpDataArray + this->encDataLength - 1);
         this->decDataLength = this->encDataLength - paddingVal - 16;
     }
-
+    
     decryptedData = new uint8_t[decDataLength];
 
-    for(int i = 16 ; i < this->decDataLength ; i++){
-        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // for(int i = 16 ; i < this->decDataLength ; i++){
+    //     *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // }
+
+    for(int i = 0 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i) = *(tmpDataArray + i + 16);
     }
 
     delete [] tmpDataArray;
@@ -1331,8 +1341,12 @@ uint8_t* AES256CBC::decrypt(){
 
     decryptedData = new uint8_t[decDataLength];
 
-    for(int i = 16 ; i < this->decDataLength ; i++){
-        *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // for(int i = 16 ; i < this->decDataLength ; i++){
+    //     *(this->decryptedData + i - 16) = *(tmpDataArray + i);
+    // }
+
+    for(int i = 0 ; i < this->decDataLength ; i++){
+        *(this->decryptedData + i) = *(tmpDataArray + i + 16);
     }
 
     delete [] tmpDataArray;
