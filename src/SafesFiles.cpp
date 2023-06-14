@@ -34,7 +34,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
     char name[256];
     safeFile.getline(name, 255, '\0');
 
-    uint16_t keySize = 0;
+    long keySize = 0;
     uint8_t* encryptedKey;
 
     uint16_t ivSize = 0;

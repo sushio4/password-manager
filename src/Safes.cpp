@@ -37,7 +37,8 @@ std::string SafesModule::getPassword(const std::string& name)
         if(!encrypted.first) return "Error that should not occur. List file lied about password's location!";
     }
     //decrypting
-    auto decrypted = cipher->decryptPassword(openSafe->cipherObjRef(), encrypted.first, encrypted.second);
+    long length = encrypted.second;
+    uint8_t* decrypted = cipher->decryptPassword(openSafe->cipherObjRef(), encrypted.first, length);
 
     std::string password((const char*)decrypted);
     delete[] decrypted;
@@ -69,7 +70,7 @@ void SafesModule::getSafePasswordList(std::vector<std::string>& list)
 
 bool SafesModule::modifyPassword(const std::string& name, const std::vector<std::string>& data)
 {
-    uint8_t passLength = data[1].size();
+    long passLength = data[1].size();
     uint8_t* encryptedPassword = nullptr;
     if(passLength)
     {
@@ -102,7 +103,7 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
         !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
         return false;
 
-    uint8_t passLength = data[1].size();
+    long passLength = data[1].size();
     auto encryptedPassword = cipher->encryptPassword(openSafe->cipherObjRef(), (uint8_t*)data[1].c_str(), passLength);
     if(!encryptedPassword)
         return false;

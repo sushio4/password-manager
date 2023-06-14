@@ -23,7 +23,7 @@ bool CipherModule::validatePassword(const std::string& password)
         std::ofstream valFile("val.bin");
         aes256 = new AES256(0, masterKey, nullptr, nullptr);
         long length = 11;
-        char* val = "magic_value";
+        char val[] = "magic_value";
         auto encrypted = aes256->encrypt((uint8_t*)val, length);
 
         valFile.write((char*)&length, sizeof(long));

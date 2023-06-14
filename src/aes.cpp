@@ -208,7 +208,7 @@ uint8_t* AES::decrypt(uint8_t* givenData, long& length)
 
     decDataLength = -1;
     auto res = decrypt();
-    length = decryptedDataLength;
+    length = decDataLength;
     return res;
 }
 
