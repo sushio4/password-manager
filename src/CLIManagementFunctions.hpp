@@ -58,7 +58,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
         return;
     }
 
-    if(!mgr.areAnySafes() && (vec[1] != "list") && (vec[1] != "create"))
+    if(!mgr.areSafesAvailable() && (vec[1] != "list") && (vec[1] != "create"))
     {
         std::cout << "You have no safes!\nEnter \"safe create\" to make one!\n";
         return;
@@ -79,7 +79,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
         }
         else if(vec[2] == "passwords")
         {
-            if(!mgr.areAnySafes())
+            if(!mgr.areSafesAvailable())
             {
                 std::cout << "You have no safes!\nEnter \"safe create\" to make one!\n";
                 return;

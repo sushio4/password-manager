@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
                 std::cout << "Wrong password!\n";
             }
         }
+        manager.postLoginInit();
 
         fflush(stdin);
 

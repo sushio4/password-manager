@@ -20,6 +20,7 @@ public:
     Manager(void);
 
     bool firstTimeLog() const;
+    void postLoginInit();
 
     void getPasswordList(std::vector<std::string>& list) const;
     void getSafeList(std::vector<std::string>& list) const;
@@ -27,7 +28,7 @@ public:
     std::string readPassword(const std::string& passwordName);
     std::string generatePassword(const std::vector<std::string>& args);
     
-    bool areAnySafes() const;
+    bool areSafesAvailable() const;
     
     bool existsPassword(const std::string& name);
     bool editPassword(const std::string& passwordName, const std::vector<std::string>& data);

@@ -40,18 +40,18 @@ bool SafesModule::readSafeFile(const std::string& filename)
     uint16_t ivSize = 0;
     uint8_t* iv;
 
-    AESType type;
+    uint8_t typei;
     uint32_t passNum;
     if(
-        !safeFile.read((char*)&keySize, 2) ||
+        !safeFile.read((char*)&keySize, sizeof(long)) ||
         !(encryptedKey = new uint8_t[keySize]) || //not necessary but I want to keep read functions in that if
         !safeFile.read((char*)encryptedKey, keySize) ||
 
         !safeFile.read((char*)&ivSize, 2) ||
         !(iv = new uint8_t[ivSize]) ||
-        !safeFile.read((char*)iv, ivSize) ||
+        !(safeFile.read((char*)iv, ivSize) || ivSize != 0) ||
 
-        !safeFile.read((char*)&type, 1) ||
+        !safeFile.read((char*)&typei, 1) ||
         !safeFile.read((char*)&passNum, 4)
     ){
         safeFile.close();
@@ -62,7 +62,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
     auto decryptedKey = cipher->decryptKey(encryptedKey, keySize);
     delete[] encryptedKey;
 
-    openSafe = new Safe(name, type, decryptedKey, nullptr);
+    openSafe = new Safe(name, (AESType)typei, decryptedKey, nullptr);
 
     for(int i = 0; i < passNum; i++)
     {
@@ -78,7 +78,7 @@ bool SafesModule::readSafeFile(const std::string& filename)
         ){
             safeFile.close();
             delete openSafe;
-            if(password) delete[] password;
+            //delete[] password;
             return false;
         }
 
@@ -95,17 +95,20 @@ bool SafesModule::writeSafeFile(const std::string& filename)
 
     //magic number
     safeFile.write("safe", 4);
-    safeFile << (std::string&)(*openSafe);
+    auto name = (std::string&)(*openSafe);
+    safeFile.write(name.c_str(), name.size()+1);
 
-    uint16_t keySize;
+    long keySize;
+    uint16_t keySize16;
     uint8_t* key = nullptr;
     uint16_t ivSize;
     uint8_t* iv = nullptr;
     AESType type;
 
-    openSafe->getKeyInfo(key, keySize, iv, ivSize, type);
+    openSafe->getKeyInfo(key, keySize16, iv, ivSize, type);
+    keySize = keySize16;
 
-    safeFile.write((char*)&keySize, 2);
+    safeFile.write((char*)&keySize, sizeof(long));
     safeFile.write((char*)key, keySize);
 
     safeFile.write((char*)&ivSize, 2);
@@ -119,7 +122,8 @@ bool SafesModule::writeSafeFile(const std::string& filename)
     for(int i = 0; i < passNum; i++)
     {
         auto element = (*openSafe)[i];
-        safeFile << std::get<0>(element);
+        auto name = std::get<0>(element);
+        safeFile.write(name.c_str(), name.size()+1);
         safeFile.write((char*)&std::get<2>(element), 1);
         safeFile.write((char*)std::get<1>(element), std::get<2>(element));
     }

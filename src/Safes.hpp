@@ -22,6 +22,8 @@ private:
 public:
     SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef);
 
+    void postLoginInit();
+
     std::string getPassword(const std::string& name);
     void getPasswordList(std::vector<std::string>& list);   
     void getSafeList(std::vector<std::string>& list);   
@@ -36,6 +38,7 @@ public:
     bool deleteSafe(const std::string& safename);
 
     bool isSafeOpen() const;
+    bool areAnySafes() const;
     bool deleteSafeHelper(const std::string& safename);
 
 private:

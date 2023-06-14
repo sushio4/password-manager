@@ -7,17 +7,23 @@ SafesModule::SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<C
     sync = syncRef;
     cipher = cipherRef;
     readSafeListFile();
+}
+
+void SafesModule::postLoginInit()
+{
     //to avoid nullptr dereferencing
     if(passFilePairs.size() != 0)
-        readSafeFile(passFilePairs[0].second);
+        readSafeFile(passFilePairs[0].second + ".safe");
 }
 
 bool SafesModule::isSafeOpen() const {return !!openSafe;}
 
+bool SafesModule::areAnySafes() const {return passFilePairs.size() != 0;}
+
 //will it work? who knows...
 std::string SafesModule::getPassword(const std::string& name)
 {
-    auto encrypted = (*openSafe)[name];
+    auto encrypted = openSafe ? (*openSafe)[name] : std::pair{nullptr, 0};
     //if it's not in this safe, check where is it
     if(!encrypted.first)
     {
@@ -97,7 +103,7 @@ bool SafesModule::modifyPassword(const std::string& name, const std::vector<std:
 
 bool SafesModule::addPassword(const std::string& safename, const std::vector<std::string>& data)
 {
-    if((std::string&)(*openSafe) != safename &&
+    if((!openSafe || (std::string&)(*openSafe) != safename) &&
         !readSafeFile(safename + ".safe"))   //this will exec only if the condition above is met
         return false;
 

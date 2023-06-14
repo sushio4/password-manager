@@ -12,6 +12,11 @@ Manager::Manager(void)
     logged = false;
 }
 
+void Manager::postLoginInit()
+{
+    safes->postLoginInit();
+}
+
 bool Manager::firstTimeLog() const
 {
     return login->firstTime();
@@ -101,9 +106,9 @@ bool Manager::createSafe(const std::string& safename, uint8_t type)
     return safes->createSafe(safename, (AESType)type);
 }
 
-bool Manager::areAnySafes() const 
+bool Manager::areSafesAvailable() const 
 {
-    return safes->isSafeOpen();
+    return safes->areAnySafes() || safes->isSafeOpen();
 }
 
 bool Manager::deletePassword(const std::string& passwordName)
