@@ -27,7 +27,7 @@ std::string SafesModule::getPassword(const std::string& name)
     if(openSafe)
         encrypted = (*openSafe)[name];
     else
-        encrypted = std::pair{nullptr, 0};
+        encrypted = std::pair<uint8_t*, uint8_t>{nullptr, 0};
     //if it's not in this safe, check where is it
     if(!encrypted.first)
     {

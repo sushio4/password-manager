@@ -3,6 +3,7 @@
 #include <hash_map>
 #include <cstring>
 #include <exception>
+//#include <sstring>
 
 // #include <vector>
 
@@ -66,9 +67,12 @@ void getInput(args_t& vec)
     char* line = nullptr;
     size_t count = 0;
 
-    auto n = getline(&line, &count, stdin);
-    while(n < 2) n = getline(&line, &count, stdin);
-    line[n - 1] = ' ';
+    std::string temp;
+    std::getline(std::cin, temp);
+    //auto n = getline(&line, &count, stdin);
+    while(temp.size() < 2) std::getline(std::cin, temp); //n = getline(&line, &count, stdin);
+    line = (char*)temp.c_str();
+    //line[temp.size() - 1] = ' ';
     
     auto token = strtok(line, " ");
     while(token != nullptr)
