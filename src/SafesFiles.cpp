@@ -71,10 +71,10 @@ bool SafesModule::readSafeFile(const std::string& filename)
 
     
         safeFile >> name;
-        safeFile >> passSize;
+        safeFile >> (int&)passSize;
         password = new uint8_t[passSize];
         for(int i = 0; i < passSize; i++)
-            safeFile >> password[i];
+            safeFile >> (int&)password[i];
 
         openSafe->add(name, password, passSize);
     }
@@ -127,7 +127,7 @@ bool SafesModule::writeSafeFile(const std::string& filename)
         safeFile << name << '\n';
         safeFile << (int)size << '\n';
         for(int i = 0; i < size; i++)
-            safeFile << ptr[i] << '\n';
+            safeFile << (int)ptr[i] << '\n';
     }
     safeFile.close();
     return true;
