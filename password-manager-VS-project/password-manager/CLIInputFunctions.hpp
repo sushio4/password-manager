@@ -13,7 +13,7 @@ void inputGenArgs(args_t& args)
     std::cout << "Enter length:\n> ";
     std::cin >> temp;
     args.push_back(temp);
-    std::cout << "Enter character set [ascii|alphanumeric|numeric|letters]:\n> ";
+    std::cout << "Enter character set [ascii|ascii+|alphanumeric|numeric|letters]:\n> ";
     std::cin >> temp;
     args.push_back(temp);
 }
@@ -32,16 +32,25 @@ bool inputPasswordName(std::string& name)
 
 bool inputPassword(std::string& password, Manager& mgr)
 {
-    std::cout << "Enter new password (enter \"-\" to generate it):\n> ";
+    std::cout << "Enter new password or \"-\" to have it generated for you (recommended):\n> ";
     std::cin >> password;
     
-    if(password == "-")
+    if (password == "")
     {
-        args_t args;
-        inputGenArgs(args);
-        password = mgr.generatePassword(args);
+        std::cout << "Why would you want to have an empty password?\n";
     }
-    return true;
+
+    if (password != "-") return true;
+
+    std::string s;
+    args_t args;
+    inputGenArgs(args);
+    do
+    {
+        std::cout << "Your generated password:\n> " << (password = mgr.generatePassword(args)) << '\n';
+        std::cout << "Enter \"r\" to regenerate or anything else to proceed\n> ";
+        std::cin >> s;
+    } while (s == "r");
 }
 
 bool inputAESType(uint8_t& type)
