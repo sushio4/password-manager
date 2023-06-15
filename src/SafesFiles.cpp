@@ -12,7 +12,8 @@ void SafesModule::closeSafe()
 
 bool SafesModule::removeSafeFile(const std::string& filename)
 {
-    return !std::remove(filename.c_str());
+    auto res = std::remove(filename.c_str());
+    return !res;
 }
 
 bool SafesModule::readSafeFile(const std::string& filename)

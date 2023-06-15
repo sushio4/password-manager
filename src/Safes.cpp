@@ -1,6 +1,8 @@
 #include "Safes.hpp"
 #include <stdint.h>
 #include <algorithm>
+#include <iostream>
+
 SafesModule::SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef)
 {
     sync = syncRef;
@@ -22,7 +24,11 @@ bool SafesModule::areAnySafes() const {return passFilePairs.size() != 0;}
 //will it work? who knows...
 std::string SafesModule::getPassword(const std::string& name)
 {
-    auto encrypted = openSafe ? (*openSafe)[name] : std::pair{nullptr, 0};
+    std::pair<uint8_t*, uint8_t> encrypted;
+    if(openSafe)
+        encrypted = (*openSafe)[name];
+    else
+        encrypted = std::pair{nullptr, 0};
     //if it's not in this safe, check where is it
     if(!encrypted.first)
     {
@@ -123,9 +129,13 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
 
     passFilePairs.push_back({data[0], safename});
 
-    return (openSafe->add(data[0], encryptedPassword, passLength) &&
+    auto res = (openSafe->add(data[0], encryptedPassword, passLength) &&
             writeSafeFile((std::string&)*openSafe + ".safe") &&
             writeSafeListFile());
+
+    std::cout << "added: "<< res << '\n';
+
+    return res;
 }
 
 bool SafesModule::isInThatSafe(const std::string& passwordname)
@@ -162,10 +172,12 @@ bool SafesModule::deleteSafe(const std::string& safename)
         closeSafe();
     }
     res = deleteSafeHelper(safename);
+
     if(passFilePairs.size())
         readSafeFile(passFilePairs[0].second);
 
     writeSafeListFile();
+    std::cout << "deleted: "<< res << '\n';
     
     return res;
 }
@@ -173,6 +185,7 @@ bool SafesModule::deleteSafe(const std::string& safename)
 bool SafesModule::deleteSafeHelper(const std::string& safename)
 {
     if(!removeSafeFile(safename + ".safe")) return false;
+
     for(auto i = passFilePairs.begin(); i < passFilePairs.end(); i++)
     {
         if((*i).second == safename) passFilePairs.erase(i);
@@ -204,5 +217,10 @@ bool SafesModule::deletePassword(const std::string& passwordName)
             
             break;
         }
-    return openSafe->remove(passwordName) && writeSafeFile((std::string&)(*openSafe) + ".safe");
+    bool res = openSafe->remove(passwordName);
+    if(!res) return false;
+
+    res = writeSafeFile((std::string&)(*openSafe) + ".safe");
+    res = res && writeSafeListFile();
+    return res;
 }
