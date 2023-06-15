@@ -31,9 +31,9 @@ void helpFunction(Manager& mgr, const args_t& vec)
     const char* helpStr =
         "Password Manager by Suski & Gorczyca\n\n"
         "Introduction:\n\n"
-        "   This program uses safes to store multiple passwords.\n"
+        "   This program uses safes to store passwords.\n"
         "   Each safe has its own name, file and AES encryption type\n"
-        "   Safe may contain multiple passwords, each with its own name.\n\n"
+        "   One safe may contain multiple passwords, each with its own name.\n\n"
 
         "Safe functions:\n\n"
 
@@ -70,7 +70,9 @@ void helpFunction(Manager& mgr, const args_t& vec)
 
         "Synchronization functions:\n\n"
         
-        " - <also coming soon, we have to write a server first>\n";
+        " - <also coming soon, we have to write a server first>\n\n"
+        
+        "Other:\n\n - quit\n";
 
     //if(vec.size() == 0)
         std::cout << helpStr;
