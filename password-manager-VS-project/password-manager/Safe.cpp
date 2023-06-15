@@ -1,0 +1,133 @@
+#include "Safe.hpp"
+
+Safe::Safe(const std::string& _name, AESType _type, uint8_t* _key, uint8_t* _iv)
+{
+    name = _name;
+    key = std::unique_ptr<uint8_t>(_key);
+    iv = std::unique_ptr<uint8_t>(_iv);
+    ivLength = ((int)type >= 3) ? 16 : 0;
+    
+    type = _type;
+    AES* ptr = nullptr;
+    switch(type)
+    {
+    case AES_128:
+        ptr = new AES128(0, _key, nullptr, nullptr);
+        keyLength = 16;
+        break;
+    case AES_192:
+        ptr = new AES192(0, _key, nullptr, nullptr);
+        keyLength = 24;
+        break;
+    case AES_256:
+        ptr = new AES256(0, _key, nullptr, nullptr);
+        keyLength = 32;
+        break;
+    case AES_128_CBC:
+        ptr = new AES128CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 16;
+        break;
+    case AES_192_CBC:
+        ptr = new AES192CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 24;
+        break;
+    case AES_256_CBC:
+        ptr = new AES256CBC(0, _key, _iv, nullptr, nullptr);
+        keyLength = 32;
+        break;
+    }
+
+    cipher.reset(ptr);
+}
+
+Safe::Safe(const std::string& _name, AESType _type) : Safe(_name, _type, nullptr, nullptr)
+{
+    key.reset(cipher.get()->generateKey());
+    if((int)type >= 3)
+    { 
+        iv.reset(cipher.get()->generateIv());
+        ivLength = 16;
+    }
+    else
+    {
+        iv.reset();
+        ivLength = 0;
+    }
+}
+
+Safe::~Safe()
+{
+    for(auto e : passwords) 
+        delete[] e;
+}
+
+bool Safe::add(const std::string& name, uint8_t* password, uint8_t passwordLength)
+{
+    if((*this)[name].first) return false; //if the password already exists
+    names.push_back(name);
+    passwords.push_back(password);
+    passLengths.push_back(passwordLength);
+    return true;
+}
+
+bool Safe::change(const std::string& name, std::string newName, uint8_t* password, uint8_t passwordLength)
+{
+    if((*this)[newName].first) return false; //if the newName already exists
+
+    for(int i = 0; i < names.size(); i++)
+    {
+        if(name == names[i])
+        {
+            if(newName != "") names[i] == newName;
+            if(password && passwordLength) passwords[i] = password, passLengths[i] = passwordLength;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Safe::remove(const std::string& name)
+{
+    for(auto i = 0; i < names.size(); i++)
+    {
+        if(names[i] == name)
+        {
+            names.erase(names.begin() + i);
+            passwords.erase(passwords.begin() + i);
+            passLengths.erase(passLengths.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
+auto Safe::operator[](const std::string& name) -> std::pair<uint8_t*, uint8_t>
+{
+    for(int i = 0; i < names.size(); i++)
+        if(names[i] == name) return {passwords[i], passLengths[i]};
+    return {nullptr, 0};
+}
+
+auto Safe::operator[](uint32_t index) -> std::tuple<std::string, uint8_t*, uint8_t>
+{
+    return {names[index], passwords[index], passLengths[index]};
+}
+
+void Safe::getKeyInfo(uint8_t*& keyRef, uint16_t& lengthRef, uint8_t*& ivRef, uint16_t& ivSizeRef, AESType& typeRef)
+{
+    if(keyRef) delete[] keyRef;
+    if(ivRef) delete[] ivRef;
+    keyRef = new uint8_t[keyLength];
+    ivRef = new uint8_t[ivLength];
+    ivSizeRef = ivLength;
+    lengthRef = keyLength;
+    memcpy(keyRef, key.get(), keyLength);
+    memcpy(ivRef, iv.get(), ivLength);
+    typeRef = type;
+}
+
+uint32_t Safe::size()
+{
+    return passwords.size();
+}
+
