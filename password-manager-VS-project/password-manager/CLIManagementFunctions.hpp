@@ -28,9 +28,51 @@ void quitFunction(Manager& mgr, const args_t& vec)
 
 void helpFunction(Manager& mgr, const args_t& vec)
 {
-    const char* helpStr = "\n"; //TODO: write an actual help message
+    const char* helpStr =
+        "Password Manager by Suski & Gorczyca\n\n"
+        "Introduction:\n\n"
+        "   This program uses safes to store multiple passwords.\n"
+        "   Each safe has its own name, file and AES encryption type\n"
+        "   Safe may contain multiple passwords, each with its own name.\n\n"
 
-    if(vec.size() == 0)
+        "Safe functions:\n\n"
+
+        " - safe list [safes|passwords](optional)\n"
+        "    - safes lists all created non-empty safes\n"
+        "    - passwords lists passwords in currently open safe\n"
+        "      (mainly for troubleshooting)\n"
+        "    - blank lists pairs \"passwordname : safename\"\n\n"
+
+        " - safe get <passwordname>\n"
+        "      Displays your password.\n\n"
+
+        " - safe add <safename> <passwordname>\n"
+        "      Adds a new password to a specified safe.\n\n"
+
+        " - safe edit [name|password] <passwordname>\n"
+        "      Allows you to change either name or contents of your password.\n\n"
+
+        " - safe create\n"
+        "      Creates a new safe.\n\n"
+
+        " - safe change <safename>\n"
+        "      Changes the name of a specified safe.\n\n"
+
+        " - safe delete [safe|pass] <name>\n"
+        "      Deletes safe or a password of a specified name.\n\n"
+
+        "Login functions:\n\n"
+
+        " - login <password>\n"
+        "      Logs you again.\n\n"
+
+        " - <more in the next versions>\n\n"
+
+        "Synchronization functions:\n\n"
+        
+        " - <also coming soon, we have to write a server first>\n";
+
+    //if(vec.size() == 0)
         std::cout << helpStr;
 }
 
