@@ -1,7 +1,6 @@
 #include "Safes.hpp"
 #include <stdint.h>
 #include <algorithm>
-#include <iostream>
 
 SafesModule::SafesModule(std::shared_ptr<SyncModule>& syncRef, std::shared_ptr<CipherModule>& cipherRef)
 {
@@ -43,7 +42,7 @@ std::string SafesModule::getPassword(const std::string& name)
 
         found:
         closeSafe();
-        readSafeFile(fname);
+        readSafeFile(fname + ".safe");
         encrypted = (*openSafe)[name];
         if(!encrypted.first) return "Error that should not occur. List file lied about password's location!";
     }
@@ -133,8 +132,6 @@ bool SafesModule::addPassword(const std::string& safename, const std::vector<std
             writeSafeFile((std::string&)*openSafe + ".safe") &&
             writeSafeListFile());
 
-    std::cout << "added: "<< res << '\n';
-
     return res;
 }
 
@@ -177,7 +174,6 @@ bool SafesModule::deleteSafe(const std::string& safename)
         readSafeFile(passFilePairs[0].second);
 
     writeSafeListFile();
-    std::cout << "deleted: "<< res << '\n';
     
     return res;
 }

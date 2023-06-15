@@ -15,7 +15,7 @@
 
 void loginFirstTime(Manager& mgr)
 {
-    std::cout << "Hello, new user!\nEnter a password you'll use to log in to this program:\n";
+    std::cout << "Hello, new user!\nEnter a password you'll use to log in to this program:\n> ";
     std::string password;
     std::cin >> password;
     mgr.loginLocal(password);
@@ -130,8 +130,13 @@ void safeFunction(Manager& mgr, const args_t& vec)
         {
             if(!inputPassword(data[1], mgr)) return;
         }
+        else
+        {
+            std::cout << "Invalid option!\n";
+            return;
+        }
 
-        if(!mgr.editPassword(vec[3], data));
+        if(!mgr.editPassword(vec[3], data))
             std::cout << "Could not edit that safe.\n";
     }
     else if(vec[1] == "add")
@@ -162,7 +167,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
     }
     else if(vec[1] == "create")
     {
-        checkArgNum(2, "Usage: safe create");
+        checkArgNum(2, "Usage: safe create\n");
 
         std::cout << "Enter a name for that safe:\n";
         std::string name;
@@ -176,7 +181,7 @@ void safeFunction(Manager& mgr, const args_t& vec)
     }
     else if(vec[1] == "delete")
     {
-        checkArgNum(4, "Usafe: safe delete [safe|pass] <name>");
+        checkArgNum(4, "Usafe: safe delete [safe|pass] <name>\n");
 
         bool res;
         if(vec[2] == "safe")
@@ -193,6 +198,10 @@ void safeFunction(Manager& mgr, const args_t& vec)
             std::cout << "Deleted successfully.\n";
         else
             std::cout << "Wrong name!\n";
+    }
+    else
+    {
+        std::cout << "Invalid option!\n";
     }
 }
 

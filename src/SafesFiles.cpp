@@ -44,18 +44,18 @@ bool SafesModule::readSafeFile(const std::string& filename)
     uint32_t typei;
     uint32_t passNum;
 
-    safeFile >> keySize;
+    safeFile >> (int&)keySize;
     encryptedKey = new uint8_t[keySize];
     for(int i = 0; i < keySize; i++)
-        safeFile >> encryptedKey[i];
+        safeFile >> (int&)encryptedKey[i];
 
-    safeFile >> ivSize;
+    safeFile >> (int&)ivSize;
     iv = new uint8_t[ivSize];
     for(int i = 0; i < ivSize; i++)
-        safeFile >> iv[i];
+        safeFile >> (int&)iv[i];
 
-    safeFile >> typei;
-    safeFile >> passNum;
+    safeFile >> (int&)typei;
+    safeFile >> (int&)passNum;
 
     auto decryptedKey = cipher->decryptKey(encryptedKey, keySize);
     delete[] encryptedKey;
@@ -103,15 +103,15 @@ bool SafesModule::writeSafeFile(const std::string& filename)
     keySize = keySize16;
     auto encryptedKey = cipher->encryptKey(key, keySize);
 
-    safeFile << keySize << '\n';
+    safeFile << (int)keySize << '\n';
 
     for(int i = 0; i < keySize; i++)
-        safeFile << encryptedKey[i] << '\n';
+        safeFile << (int)encryptedKey[i] << '\n';
 
-    safeFile << ivSize << '\n';
+    safeFile << (int)ivSize << '\n';
     
     for(int i = 0; i < ivSize; i++)
-        safeFile << iv[i] << '\n';
+        safeFile << (int)iv[i] << '\n';
 
     safeFile << (int)type << '\n';
 

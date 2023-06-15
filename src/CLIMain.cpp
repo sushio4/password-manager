@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
         while(true)
         {
-            std::cout << "Enter a command:\n";
+            std::cout << "Enter a command:\n> ";
             words.clear();
             getInput(words);        
             parseInput(manager, words);

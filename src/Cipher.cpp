@@ -53,20 +53,33 @@ bool CipherModule::validatePassword(const std::string& password)
 
 uint8_t *CipherModule::decryptPassword(AES &aes, uint8_t *src, long& length) 
 {
-    return aes.decrypt(src, length);
+    auto ptr = aes.decrypt(src, length);
+    auto copy = new uint8_t[length+1];
+    memcpy(copy, ptr, length);
+    copy[length] = '\0';
+    return copy;
 }
 
 uint8_t *CipherModule::encryptPassword(AES &aes, uint8_t *src, long& length) 
 {
-    return aes.encrypt(src, length);
+    auto ptr = aes.encrypt(src, length);
+    auto copy = new uint8_t[length];
+    memcpy(copy, ptr, length);
+    return copy;
 }
 
 uint8_t *CipherModule::decryptKey(uint8_t *src, long& length) 
 {
-    return aes256->decrypt(src, length);
+    auto ptr = aes256->decrypt(src, length);
+    auto copy = new uint8_t[length];
+    memcpy(copy, ptr, length);
+    return copy;
 }
 
 uint8_t* CipherModule::encryptKey(uint8_t* src, long& length)
 {
-    return aes256->encrypt(src, length);
+    auto ptr = aes256->encrypt(src, length);
+    auto copy = new uint8_t[length];
+    memcpy(copy, ptr, length);
+    return copy;
 }

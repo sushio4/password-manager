@@ -5,7 +5,7 @@ Safe::Safe(const std::string& _name, AESType _type, uint8_t* _key, uint8_t* _iv)
     name = _name;
     key = std::unique_ptr<uint8_t>(_key);
     iv = std::unique_ptr<uint8_t>(_iv);
-    ivLength = (type >= AES_128_CBC) ? 16 : 0;
+    ivLength = ((int)type >= 3) ? 16 : 0;
     
     type = _type;
     AES* ptr = nullptr;
@@ -43,10 +43,15 @@ Safe::Safe(const std::string& _name, AESType _type, uint8_t* _key, uint8_t* _iv)
 Safe::Safe(const std::string& _name, AESType _type) : Safe(_name, _type, nullptr, nullptr)
 {
     key.reset(cipher.get()->generateKey());
-    if(type >= 3)
+    if((int)type >= 3)
     { 
         iv.reset(cipher.get()->generateIv());
         ivLength = 16;
+    }
+    else
+    {
+        iv.reset();
+        ivLength = 0;
     }
 }
 
